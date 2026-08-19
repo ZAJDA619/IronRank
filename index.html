@@ -513,7 +513,7 @@
   <!-- LOG WORKOUT -->
   <section id="tab-log" style="display:none">
     <div class="card">
-      <h2>Nový trénink <span class="tiny">(deník tréninků — na ranky a postavičku nemá vliv, ty se zapisují zvlášť v „Cviky &amp; Tělo“)</span></h2>
+      <h2>Nový trénink</h2>
       <div class="tiny" id="logStreakBonusLbl" style="margin-bottom:10px"></div>
 
       <label>Presety <span class="tiny">(klikni a rovnou se ti načtou cviky)</span></label>
@@ -521,7 +521,7 @@
 
       <div class="row2">
         <div>
-          <label>Název tréninku (nepovinné)</label>
+          <label>Název tréninku</label>
           <input type="text" id="workoutName" placeholder="např. Push day, Nohy...">
         </div>
         <div>
@@ -533,14 +533,14 @@
       <div style="margin-top:16px">
         <div class="row3">
           <div>
-            <label>Cvik <span class="tiny" id="exCount"></span></label>
+            <label>Cvik</label>
             <select id="exSelect"></select>
           </div>
           <div>
             <label>Jiný cvik</label>
             <input type="text" id="newExName" placeholder="např. Bulharský dřep">
           </div>
-          <button class="btn secondary" id="addExerciseBtn">+ Přidat do tréninku</button>
+          <button class="btn secondary small" id="addExerciseBtn">+ Přidat</button>
         </div>
         <div class="flexend" style="justify-content:space-between; margin-top:8px">
           <a id="demoLink" href="#" target="_blank" rel="noopener" class="profile-link">▶ Ukázat, jak se cvik dělá (YouTube)</a>
@@ -563,7 +563,7 @@
   <!-- EXERCISES & BODY -->
   <section id="tab-exercises" style="display:none">
     <div class="card">
-      <h2>🧍 Tělo podle ranků <span class="tiny">(barva a záře svalu = tvůj rank v cviku, který ho trénuje — klikni na sval pro filtr cviků)</span></h2>
+      <h2>🧍 Tělo podle ranků</h2>
       <div class="bodyfigs">
         <div class="bodyfig-col">
           <svg viewBox="0 0 240 520" class="bodyfig">
@@ -699,7 +699,7 @@
     </div>
 
     <div class="card">
-      <h2>📝 Zapsat PR <span class="tiny">(zapiš cvik, váhu a opakování — podle toho se počítají ranky a svítí postavička)</span></h2>
+      <h2>📝 Zapsat PR</h2>
       <div class="row2">
         <div>
           <label>Cvik</label>
@@ -732,7 +732,7 @@
     </div>
 
     <div class="card">
-      <h2>Cviky &amp; Ranky <span class="tiny">(rank porovnává tvůj (věkem upravený) odhad maxima s běžným standardem pro daný sval)</span></h2>
+      <h2>Cviky &amp; Ranky</h2>
       <div id="muscleFilterChip" style="display:none; margin-bottom:12px"></div>
       <div id="exerciseRanks" class="exlist"><div class="empty">Zatím žádné PR. Zapiš první výše.</div></div>
     </div>
@@ -741,7 +741,7 @@
   <!-- FRIENDS -->
   <section id="tab-friends" style="display:none">
     <div class="card">
-      <h2>👥 Přátelé <span class="tiny">(najdi kamaráda podle e-mailu, uvidíš jeho level, ranky a PR naživo)</span></h2>
+      <h2>👥 Přátelé</h2>
       <div class="row2">
         <div style="flex:1">
           <label>E-mail kamaráda</label>
@@ -1335,10 +1335,9 @@ function buildExerciseOptionsHTML(placeholderText){
 function renderLogTab(){
   const sel = document.getElementById('exSelect');
   const prevValue = sel.value;
-  const {optsHtml, count} = buildExerciseOptionsHTML('— vyber cvik ({n} celkem) —');
+  const {optsHtml} = buildExerciseOptionsHTML('— vyber cvik ({n} celkem) —');
   sel.innerHTML = optsHtml;
   if(prevValue && [...sel.options].some(o => o.value === prevValue)) sel.value = prevValue;
-  document.getElementById('exCount').textContent = `(${count} cviků v nabídce)`;
   updateDemoLink();
 
   if(!document.getElementById('workoutDate').value){
