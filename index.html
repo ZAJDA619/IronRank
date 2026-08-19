@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>IronRank — Posilovací deník</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IronRank">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+<style>
+  :root{
+    --bg:#0f1115; --bg2:#171a21; --card:#1c2029; --card2:#222633;
+    --text:#eef0f4; --muted:#8b93a3; --accent:#4fc3f7; --accent2:#0ea5e9;
+    --bronze:#9a5a2e; --silver:#8f9aa8; --gold:#ffd23f; --platinum:#7fd8e8; --diamond:#8a7ffb; --legend:#ff5da2;
+    --good:#4fd68a; --bad:#ff6b6b; --border:#2a2f3b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,var(--bg),var(--bg2)); color:var(--text); min-height:100vh;
+    font-size:16px; line-height:1.45; -webkit-text-size-adjust:100%; text-size-adjust:100%;
+  }
+  .app{max-width:960px; margin:0 auto; padding:20px 16px 60px;}
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .logo{
+    width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#1a1a1a;font-size:18px;
+  }
+  .brand h1{font-size:20px; margin:0;}
+  .brand small{color:var(--muted); display:block; margin-top:1px;}
+
+  .levelbox{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:8px 12px; min-width:0; max-width:190px; flex-shrink:1;
+  }
+  .levelbox .row{display:flex; justify-content:space-between; align-items:baseline; gap:6px; margin-bottom:4px;}
+  .levelbox .lvl{font-size:14px; font-weight:800; color:var(--accent); white-space:nowrap;}
+  .levelbox .xp{font-size:10.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .levelbox .rankname{font-size:11.5px; font-weight:700; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  .rankcard{
+    display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:16px 18px; margin-bottom:16px;
+  }
+  .rankcard .ricon{font-size:38px; width:60px; height:60px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; background:var(--card2); flex-shrink:0;}
+  .rankcard .rname{font-size:20px; font-weight:800;}
+  .rankcard .rmeta{font-size:14px; color:var(--muted); margin-top:2px;}
+  .rankcard .rprog{margin-top:8px;}
+
+  .rank-track{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
+  .rank-tile{
+    border-radius:12px; padding:12px; border:1px solid var(--border); background:var(--card2);
+    text-align:center; opacity:.4; filter:grayscale(1);
+  }
+  .rank-tile.unlocked{opacity:1; filter:none;}
+  .rank-tile .ricon2{font-size:24px;}
+  .rank-tile h4{margin:6px 0 2px; font-size:14.5px;}
+  .rank-tile p{margin:0; font-size:12.5px; color:var(--muted);}
+  .bar{height:8px; background:#0d0f14; border-radius:6px; overflow:hidden; border:1px solid var(--border);}
+  .bar > div{height:100%; background:linear-gradient(90deg,var(--accent2),var(--accent)); transition:width .4s ease;}
+
+  nav.tabs{
+    display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;
+    background:var(--card); padding:6px; border-radius:12px; border:1px solid var(--border);
+  }
+  nav.tabs button{
+    flex:1; min-width:100px; padding:9px 10px; border:none; border-radius:9px; background:transparent;
+    color:var(--muted); font-weight:600; cursor:pointer; font-size:15px; transition:.15s;
+  }
+  nav.tabs button.active{background:var(--accent); color:#1a1200;}
+  nav.tabs button:hover:not(.active){background:var(--card2); color:var(--text);}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px;}
+  .stat{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;
+  }
+  .stat .num{font-size:24px; font-weight:800;}
+  .stat .lbl{color:var(--muted); font-size:14px; margin-top:2px;}
+  .stat.streak .num{color:var(--good);}
+  .stat.streak.broken .num{color:var(--bad);}
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:16px;
+  }
+  .card h2{margin:0 0 14px; font-size:17px; display:flex; align-items:center; gap:8px;}
+  .card h2 .badge-count{background:var(--card2); color:var(--muted); font-size:13px; padding:2px 8px; border-radius:10px;}
+
+  label{display:block; font-size:14px; color:var(--muted); margin-bottom:4px; margin-top:12px;}
+  input,select{
+    width:100%; padding:9px 10px; border-radius:9px; border:1px solid var(--border);
+    background:#12141a; color:var(--text); font-size:16px;
+  }
+  input:focus,select:focus{outline:none; border-color:var(--accent);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:end;}
+
+  button.btn{
+    padding:10px 16px; border-radius:9px; border:none; background:var(--accent); color:#1a1200;
+    font-weight:700; cursor:pointer; font-size:15.5px; transition:.15s;
+  }
+  button.btn:hover{background:var(--accent2);}
+  button.btn.secondary{background:var(--card2); color:var(--text); border:1px solid var(--border);}
+  button.btn.secondary:hover{background:#2a2f3d;}
+  button.btn.danger{background:transparent; color:var(--bad); border:1px solid var(--bad);}
+  button.btn.small{padding:6px 10px; font-size:14px;}
+
+  .setlist{margin-top:10px;}
+  .setrow{
+    display:grid; grid-template-columns:28px 1fr 1fr auto; gap:8px; align-items:center; margin-bottom:6px;
+    font-size:15.5px;
+  }
+  .setrow .idx{color:var(--muted); text-align:center;}
+  .exercise-block{
+    border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px; background:var(--card2);
+  }
+  .exercise-block .ehead{display:flex; justify-content:space-between; align-items:center;}
+  .exercise-block .ehead b{font-size:16px;}
+  .pill{
+    display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:13px; font-weight:700;
+  }
+  .pill.bronze{background:rgba(169,113,66,.2); color:var(--bronze);}
+  .pill.silver{background:rgba(184,192,204,.2); color:var(--silver);}
+  .pill.gold{background:rgba(242,177,52,.2); color:var(--gold);}
+  .pill.platinum{background:rgba(127,216,232,.2); color:var(--platinum);}
+  .pill.diamond{background:rgba(138,127,251,.2); color:var(--diamond);}
+  .pill.legend{background:rgba(255,93,162,.2); color:var(--legend);}
+  .pill.unranked{background:rgba(139,147,163,.2); color:var(--muted);}
+
+  .exlist{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;}
+  .exlist .excard{background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:14px;}
+  .excard-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .excard h3{margin:0 0 6px; font-size:16px;}
+  .pr-edit-btn{
+    background:none; border:1px solid var(--border); color:var(--muted); border-radius:7px; width:26px; height:26px;
+    cursor:pointer; font-size:14.5px; flex-shrink:0; transition:.15s;
+  }
+  .pr-edit-btn:hover{color:var(--accent); border-color:var(--accent);}
+  .pr-line{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:4px;}
+  .pr-value{font-size:17px; font-weight:800; color:var(--text);}
+  .excard .best{font-size:14px; color:var(--muted); margin-bottom:8px;}
+  .progress-mini{height:6px; background:#0d0f14; border-radius:4px; overflow:hidden; margin-top:8px; border:1px solid var(--border);}
+  .progress-mini > div{height:100%; background:linear-gradient(90deg,var(--accent2),var(--accent));}
+
+  .history-item{border-bottom:1px solid var(--border); padding:12px 0;}
+  .history-item:last-child{border-bottom:none;}
+  .history-item .hdate{font-weight:700; font-size:15.5px; display:flex; justify-content:space-between; align-items:center;}
+  .history-item .hex{font-size:14.5px; color:var(--muted); margin-top:4px;}
+  .xp-tag{color:var(--accent); font-weight:700; font-size:14px;}
+
+  .ach-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px;}
+  .ach{
+    border-radius:12px; padding:14px; border:1px solid var(--border); background:var(--card2);
+    opacity:.4; filter:grayscale(1);
+  }
+  .ach.unlocked{opacity:1; filter:none; border-color:var(--accent);}
+  .ach .aicon{font-size:26px;}
+  .ach h4{margin:8px 0 4px; font-size:15.5px;}
+  .ach p{margin:0; font-size:13.5px; color:var(--muted);}
+
+  .toast{
+    position:fixed; bottom:20px; right:20px; background:var(--card); border:1px solid var(--accent);
+    border-radius:12px; padding:14px 18px; max-width:320px; box-shadow:0 8px 30px rgba(0,0,0,.4);
+    animation:slidein .3s ease; z-index:999;
+  }
+  @keyframes slidein{from{transform:translateY(20px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  .toast b{color:var(--accent);}
+  .toast.warn{border-color:var(--bad);}
+  .empty{color:var(--muted); font-size:15px; text-align:center; padding:24px 0;}
+  .flexend{display:flex; justify-content:flex-end; gap:8px; margin-top:14px;}
+  select#exSelect{margin-top:0;}
+  .tiny{font-size:13px; color:var(--muted);}
+  a.tiny{color:var(--accent); text-decoration:none;}
+  a.tiny:hover{text-decoration:underline;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(5,6,9,.75); backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px;
+  }
+  .modal-box{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:26px; max-width:400px; width:100%;
+  }
+  .modal-box h2{margin:0 0 6px; font-size:20px;}
+  .modal-box p.desc{color:var(--muted); font-size:15px; margin:0 0 18px;}
+  .profile-link{background:none; border:none; color:var(--muted); font-size:13.5px; cursor:pointer; padding:0; text-decoration:underline; margin-top:2px;}
+  .profile-link:hover{color:var(--text);}
+
+  .profile-header-row{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .profile-header-left{display:flex; align-items:center; gap:14px;}
+  .pname{font-size:20px; font-weight:800;}
+  .bodyfig-mini{width:74px !important; height:auto; flex-shrink:0;}
+  .profile-header-figure{display:flex; align-items:flex-end; gap:6px;}
+
+  .bodyfigs{display:flex; justify-content:center; gap:28px; flex-wrap:wrap; padding:10px 0;}
+  .bodyfig-col{width:220px; max-width:44vw;}
+  .bodyfig{
+    width:100%; height:auto; overflow:visible;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));
+  }
+  .bodysilhouette{fill:url(#skinGrad); stroke:none;}
+  .bodypart-neutral{fill:url(#skinGrad); stroke:#eef1f6; stroke-width:2.5; stroke-linejoin:round;}
+  .musclepart{
+    fill:url(#skinGrad); stroke:#eef1f6; stroke-width:2.5; stroke-linejoin:round;
+    transition:fill .4s ease, filter .4s ease, stroke .4s ease; cursor:pointer;
+  }
+  .musclepart.lit{stroke:#eef1f6; stroke-width:2.5;}
+  .bodyhair{fill:#8a92a3; stroke:#eef1f6; stroke-width:2.5; stroke-linejoin:round;}
+  .clavicle{fill:none; stroke:#eef1f6; stroke-width:2; stroke-linecap:round; opacity:.5;}
+  .bodyface{fill:#2a2f3b;}
+  .musclepart.active-filter{stroke:var(--accent); stroke-width:2.5;}
+  .musclepart:hover{stroke:var(--accent); stroke-width:2;}
+  .body-legend{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:16px; border-top:1px solid var(--border); padding-top:14px;}
+  .filter-chip{
+    display:inline-flex; align-items:center; gap:8px; background:var(--card2); border:1px solid var(--accent);
+    color:var(--accent); padding:6px 12px; border-radius:20px; font-size:14.5px; font-weight:700;
+  }
+  .filter-chip button{background:none; border:none; color:var(--accent); cursor:pointer; font-size:15px; line-height:1; padding:0;}
+
+  .friend-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; margin-bottom:14px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .friend-card img{width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); flex-shrink:0;}
+  .friend-card .fname{font-size:17px; font-weight:800;}
+  .friend-card .fmeta{color:var(--muted); font-size:14px;}
+  .friend-card .frank{font-size:14px; font-weight:700; margin-top:2px;}
+  .friend-card .fprs{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+  .friend-card .fpr-tag{background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:13px;}
+  .friend-card .fbody{display:flex; gap:4px; margin-left:auto;}
+  .friend-remove{background:none; border:1px solid var(--border); color:var(--muted); border-radius:7px; padding:4px 10px; font-size:13.5px; cursor:pointer;}
+  .friend-remove:hover{color:var(--bad); border-color:var(--bad);}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="authModal" style="display:flex">
+  <div class="modal-box">
+    <h2 id="authTitle">🔑 Přihlášení</h2>
+    <p class="desc">Účet slouží k tomu, aby tě mohli přátelé přidat a vidět tvůj profil, level a PR. Data se ukládají online (Firebase).</p>
+    <label>E-mail</label>
+    <input type="email" id="authEmail" placeholder="ty@email.cz" autocomplete="username">
+    <label>Heslo</label>
+    <input type="password" id="authPassword" placeholder="alespoň 6 znaků" autocomplete="current-password">
+    <div class="tiny" id="authError" style="color:var(--bad); margin-top:8px; display:none"></div>
+    <div class="flexend" style="justify-content:space-between; align-items:center">
+      <button class="profile-link" id="authToggleMode">Nemáš účet? Zaregistruj se</button>
+      <button class="btn" id="authSubmitBtn">Přihlásit se</button>
+    </div>
+    <div style="text-align:center; margin-top:16px; padding-top:14px; border-top:1px solid var(--border)">
+      <button class="profile-link" id="authGuestBtn">Pokračovat jako host</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="onboardingModal" style="display:none">
+  <div class="modal-box">
+    <h2 id="modalTitle">Vítej v IronRank 👋</h2>
+    <p class="desc" id="modalDesc">Ještě než začneš, řekni nám o sobě pár věcí. Věk používáme k tomu, aby odhady tvého maxima (1RM) seděly na tvůj věk a nevypadaly nesmyslně vysoko — ranky pak stejně počítáme jen podle tvého vlastního zlepšení, ne podle cizích tabulek.</p>
+
+    <div style="display:flex; align-items:center; gap:14px; margin-top:8px">
+      <img id="avatarPreview" src="" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:#12141a;border:1px solid var(--border); display:none">
+      <div id="avatarPlaceholder" style="width:64px;height:64px;border-radius:50%;background:#12141a;border:1px solid var(--border); display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:22px;">👤</div>
+      <div>
+        <label style="margin-top:0">Profilovka</label>
+        <input type="file" id="avatarInput" accept="image/*">
+      </div>
+    </div>
+
+    <label>Jméno / přezdívka</label>
+    <input type="text" id="nameInput" maxlength="30" placeholder="např. Kája">
+
+    <label>Věk</label>
+    <input type="number" id="ageInput" min="8" max="100" placeholder="např. 15">
+    <div id="guestUpgradeBox" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--border)">
+      <div class="tiny" style="margin-bottom:8px">Jsi tu jako host — progress je jen v tomto zařízení. Přihlas se nebo si založ účet a nic ti nezmizí.</div>
+      <button class="profile-link" id="guestUpgradeBtn">🔐 Přihlásit se / zaregistrovat se</button>
+    </div>
+    <div class="flexend">
+      <button class="btn" id="saveAgeBtn">Pokračovat</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="presetModal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <h2>📋 Presety tréninků</h2>
+    <p class="desc">Uprav si, které cviky patří do kterého presetu. Klikni na ✕ u cviku, ať ho z presetu odebereš, nebo přidej nový cvik dole.</p>
+    <div class="flexend" style="justify-content:flex-start; margin-bottom:12px">
+      <button class="btn secondary small" id="newPresetBtn">+ Nový prázdný preset</button>
+    </div>
+    <div id="presetManageList"></div>
+    <div class="flexend">
+      <button class="btn" id="closePresetModalBtn">Zavřít</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="textPromptModal" style="display:none">
+  <div class="modal-box" style="max-width:380px">
+    <h2 id="textPromptTitle">Zadej název</h2>
+    <p class="desc" id="textPromptDesc" style="display:none"></p>
+    <input type="text" id="textPromptInput">
+    <div class="flexend">
+      <button class="btn secondary" id="textPromptCancelBtn">Zrušit</button>
+      <button class="btn" id="textPromptOkBtn">Uložit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal" style="display:none">
+  <div class="modal-box" style="max-width:380px">
+    <h2>Potvrzení</h2>
+    <p class="desc" id="confirmModalMsg"></p>
+    <div class="flexend">
+      <button class="btn secondary" id="confirmModalCancelBtn">Zrušit</button>
+      <button class="btn danger" id="confirmModalOkBtn">Potvrdit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="prModal" style="display:none">
+  <div class="modal-box">
+    <h2 id="prModalTitle">Upravit PR</h2>
+    <p class="desc">Opraví tvůj poslední zapsaný PR u tohoto cviku (např. překlep ve váze). Pro zápis nového PR použij kartu „Zapsat PR“ v Cviky &amp; Tělo.</p>
+    <div class="row2">
+      <div>
+        <label>Váha (kg)</label>
+        <input type="number" id="prWeightInput" min="0" step="0.5">
+      </div>
+      <div>
+        <label>Opakování</label>
+        <input type="number" id="prRepsInput" min="1" step="1">
+      </div>
+    </div>
+    <div class="flexend">
+      <button class="btn secondary" id="cancelPRBtn">Zrušit</button>
+      <button class="btn" id="savePRBtn">Uložit PR</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <img id="headerAvatar" src="" alt="" style="width:38px;height:38px;border-radius:10px;object-fit:cover;display:none">
+      <div class="logo" id="headerLogo">IR</div>
+      <div>
+        <h1 id="headerName">IronRank</h1>
+        <button class="profile-link" id="editProfileBtn">upravit profil</button>
+      </div>
+    </div>
+    <div class="levelbox">
+      <div class="row"><span class="lvl" id="lvlText">Level 1</span><span class="xp" id="xpText">0 / 100 XP</span></div>
+      <div class="rankname" id="rankNameText">🌱 Nováček</div>
+      <div class="bar"><div id="xpBar" style="width:0%"></div></div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="dashboard" class="active">Přehled</button>
+    <button data-tab="log">Zapsat trénink</button>
+    <button data-tab="exercises">Cviky &amp; Tělo</button>
+    <button data-tab="friends">Přátelé</button>
+    <button data-tab="history">Historie</button>
+    <button data-tab="achievements">Odznaky</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard">
+    <div class="card profile-header-card">
+      <div class="profile-header-row">
+        <div class="profile-header-left">
+          <img id="dashAvatar" src="" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--accent); display:none">
+          <div>
+            <div class="pname" id="dashName">—</div>
+            <div class="tiny" id="dashAge"></div>
+            <button class="profile-link" id="editProfileBtn2">upravit profil</button>
+          </div>
+        </div>
+        <div class="profile-header-figure">
+          <svg viewBox="0 0 240 520" class="bodyfig bodyfig-mini">
+            <g class="bodysilhouette">
+              <ellipse cx="120" cy="45" rx="27" ry="31"/>
+              <rect x="64" y="58" width="112" height="112" rx="40"/>
+              <rect x="70" y="150" width="100" height="104" rx="30"/>
+              <rect x="30" y="90" width="52" height="204" rx="24"/>
+              <rect x="158" y="90" width="52" height="204" rx="24"/>
+              <ellipse cx="71" cy="288" rx="12" ry="14"/>
+              <ellipse cx="169" cy="288" rx="12" ry="14"/>
+              <rect x="64" y="238" width="112" height="182" rx="34"/>
+              <rect x="54" y="408" width="62" height="76" rx="20"/>
+              <rect x="124" y="408" width="62" height="76" rx="20"/>
+              <ellipse cx="72" cy="480" rx="17" ry="10"/>
+              <ellipse cx="168" cy="480" rx="17" ry="10"/>
+            </g>
+            <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
+            <path class="bodyhair" d="M95,32 C95,16 106,7 120,7 C134,7 145,16 145,32 C145,25 138,20 120,20 C102,20 95,25 95,32 Z"/>
+            <ellipse class="bodyface" cx="111" cy="45" rx="3" ry="3.6"/>
+            <ellipse class="bodyface" cx="129" cy="45" rx="3" ry="3.6"/>
+            <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
+            <path class="bodypart-neutral" d="M80,92 Q120,78 160,92 L160,106 Q120,96 80,106 Z"/>
+            <path class="clavicle" d="M120,92 Q100,82 82,96"/>
+            <path class="clavicle" d="M120,92 Q140,82 158,96"/>
+            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+            <path class="musclepart" data-muscle="chest" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/>
+            <path class="musclepart" data-muscle="chest" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/>
+            <path class="bodypart-neutral" d="M92,158 Q98,186 96,214 L88,212 Q85,184 84,160 Z"/>
+            <path class="bodypart-neutral" d="M148,158 Q142,186 144,214 L152,212 Q155,184 156,160 Z"/>
+            <rect class="musclepart" data-muscle="abs" x="98" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="123" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="98" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="123" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="98" y="204" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="123" y="204" width="19" height="18" rx="6"/>
+            <path class="bodypart-neutral" d="M90,230 Q120,240 150,230 L152,248 Q120,258 88,248 Z"/>
+            <path class="musclepart" data-muscle="biceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
+            <path class="musclepart" data-muscle="biceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+            <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
+            <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
+            <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
+            <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
+            <path class="musclepart" data-muscle="quads" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/>
+            <path class="musclepart" data-muscle="quads" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/>
+            <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
+            <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
+            <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
+            <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
+          </svg>
+          <svg viewBox="0 0 240 520" class="bodyfig bodyfig-mini">
+            <g class="bodysilhouette">
+              <ellipse cx="120" cy="45" rx="27" ry="31"/>
+              <rect x="64" y="58" width="112" height="112" rx="40"/>
+              <rect x="70" y="150" width="100" height="104" rx="30"/>
+              <rect x="30" y="90" width="52" height="204" rx="24"/>
+              <rect x="158" y="90" width="52" height="204" rx="24"/>
+              <ellipse cx="71" cy="288" rx="12" ry="14"/>
+              <ellipse cx="169" cy="288" rx="12" ry="14"/>
+              <rect x="64" y="238" width="112" height="182" rx="34"/>
+              <rect x="54" y="408" width="62" height="76" rx="20"/>
+              <rect x="124" y="408" width="62" height="76" rx="20"/>
+              <ellipse cx="72" cy="480" rx="17" ry="10"/>
+              <ellipse cx="168" cy="480" rx="17" ry="10"/>
+            </g>
+            <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
+            <path class="bodyhair" d="M95,32 C95,15 106,6 120,6 C134,6 145,15 145,32 C145,44 140,54 132,60 C138,50 138,30 120,30 C102,30 102,50 108,60 C100,54 95,44 95,32 Z"/>
+            <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
+            <path class="musclepart" data-muscle="back" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
+            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+            <path class="musclepart" data-muscle="back" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
+            <path class="musclepart" data-muscle="back" d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
+            <rect class="musclepart" data-muscle="back" x="104" y="166" width="32" height="34" rx="12"/>
+            <path class="musclepart" data-muscle="triceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
+            <path class="musclepart" data-muscle="triceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+            <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
+            <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
+            <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
+            <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
+            <path class="musclepart" data-muscle="glutes" d="M120,206 C99,206 87,219 87,236 C87,252 101,264 120,264 C139,264 153,252 153,236 C153,219 141,206 120,206 Z"/>
+            <path class="musclepart" data-muscle="hamstrings" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/>
+            <path class="musclepart" data-muscle="hamstrings" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/>
+            <path class="musclepart" data-muscle="calves" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/>
+            <path class="musclepart" data-muscle="calves" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/>
+            <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
+            <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="rankcard" id="rankCard">
+      <div class="ricon" id="rankCardIcon">🌱</div>
+      <div style="flex:1">
+        <div class="rname" id="rankCardName">Nováček</div>
+        <div class="rmeta" id="rankCardMeta">Level 1</div>
+        <div class="rprog">
+          <div class="bar"><div id="rankCardBar" style="width:0%"></div></div>
+          <div class="tiny" id="rankCardNext" style="margin-top:4px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="stat streak" id="streakStat"><div class="num" id="streakNum">0</div><div class="lbl">dní v řadě 🔥</div><div class="tiny" id="streakBonusLbl" style="margin-top:4px; color:var(--good)"></div><button type="button" id="notifyToggleBtn" class="tiny" style="background:none; border:none; color:var(--accent); cursor:pointer; padding:0; margin-top:6px; text-decoration:underline"></button></div>
+      <div class="stat"><div class="num" id="totalWorkouts">0</div><div class="lbl">tréninků celkem</div></div>
+      <div class="stat"><div class="num" id="totalBadges">0</div><div class="lbl">odznaků odemčeno</div></div>
+    </div>
+
+    <div class="card">
+      <h2>🏆 Nejlepší ranky</h2>
+      <div id="topRanks" class="exlist"><div class="empty">Zatím nemáš zaznamenané žádné cviky.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Poslední trénink</h2>
+      <div id="lastWorkout"><div class="empty">Ještě jsi nic nezapsal. Mrkni na záložku „Zapsat trénink“.</div></div>
+    </div>
+  </section>
+
+  <!-- LOG WORKOUT -->
+  <section id="tab-log" style="display:none">
+    <div class="card">
+      <h2>Nový trénink <span class="tiny">(deník tréninků — na ranky a postavičku nemá vliv, ty se zapisují zvlášť v „Cviky &amp; Tělo“)</span></h2>
+      <div class="tiny" id="logStreakBonusLbl" style="margin-bottom:10px"></div>
+
+      <label>Presety <span class="tiny">(klikni a rovnou se ti načtou cviky)</span></label>
+      <div id="presetsRow"></div>
+
+      <div class="row2">
+        <div>
+          <label>Název tréninku (nepovinné)</label>
+          <input type="text" id="workoutName" placeholder="např. Push day, Nohy...">
+        </div>
+        <div>
+          <label>Datum</label>
+          <input type="date" id="workoutDate">
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="row3">
+          <div>
+            <label>Cvik <span class="tiny" id="exCount"></span></label>
+            <select id="exSelect"></select>
+          </div>
+          <div>
+            <label>Jiný cvik</label>
+            <input type="text" id="newExName" placeholder="např. Bulharský dřep">
+          </div>
+          <button class="btn secondary" id="addExerciseBtn">+ Přidat do tréninku</button>
+        </div>
+        <div class="flexend" style="justify-content:space-between; margin-top:8px">
+          <a id="demoLink" href="#" target="_blank" rel="noopener" class="profile-link">▶ Ukázat, jak se cvik dělá (YouTube)</a>
+          <label class="tiny" id="addToPresetWrap" style="display:none; align-items:center; gap:6px; cursor:pointer">
+            <input type="checkbox" id="addToPresetCheck" style="width:auto"> Přidat i do presetu „<span id="activePresetNameLbl"></span>“
+          </label>
+        </div>
+      </div>
+
+      <div id="currentExercises" style="margin-top:16px"></div>
+
+      <div class="flexend">
+        <button class="btn secondary" id="saveAsPresetBtn">💾 Uložit jako preset</button>
+        <button class="btn secondary" id="clearWorkoutBtn">Zrušit</button>
+        <button class="btn" id="saveWorkoutBtn">Uložit trénink</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXERCISES & BODY -->
+  <section id="tab-exercises" style="display:none">
+    <div class="card">
+      <h2>🧍 Tělo podle ranků <span class="tiny">(barva a záře svalu = tvůj rank v cviku, který ho trénuje — klikni na sval pro filtr cviků)</span></h2>
+      <div class="bodyfigs">
+        <div class="bodyfig-col">
+          <svg viewBox="0 0 240 520" class="bodyfig">
+            <defs>
+              <radialGradient id="figGlow" cx="50%" cy="38%" r="65%">
+                <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.16"/>
+                <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="skinGrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="#dfe3ea"/>
+                <stop offset="100%" stop-color="#b9c0cc"/>
+              </linearGradient>
+              <linearGradient id="headGrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="#dfe3ea"/>
+                <stop offset="100%" stop-color="#b9c0cc"/>
+              </linearGradient>
+              <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#000" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <!-- head / neck -->
+            <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
+            <path class="bodyhair" d="M95,32 C95,16 106,7 120,7 C134,7 145,16 145,32 C145,25 138,20 120,20 C102,20 95,25 95,32 Z"/>
+            <ellipse class="bodyface" cx="111" cy="45" rx="3" ry="3.6"/>
+            <ellipse class="bodyface" cx="129" cy="45" rx="3" ry="3.6"/>
+            <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
+
+            <!-- clavicle -->
+            <path class="clavicle" d="M120,92 Q100,82 82,96"/>
+            <path class="clavicle" d="M120,92 Q140,82 158,96"/>
+
+            <!-- shoulders -->
+            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+
+            <!-- chest -->
+            <path class="musclepart" data-muscle="chest" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/>
+            <path class="musclepart" data-muscle="chest" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/>
+
+            <!-- obliques (boční břišní svaly, not tracked separately — part of "abs") -->
+            <path class="bodypart-neutral" d="M92,158 Q98,186 96,214 L88,212 Q85,184 84,160 Z"/>
+            <path class="bodypart-neutral" d="M148,158 Q142,186 144,214 L152,212 Q155,184 156,160 Z"/>
+
+            <!-- abs, six pack grid -->
+            <rect class="musclepart" data-muscle="abs" x="98" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="123" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="98" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="123" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="98" y="204" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" x="123" y="204" width="19" height="18" rx="6"/>
+
+            <!-- waist -->
+            <path class="bodypart-neutral" d="M90,230 Q120,240 150,230 L152,248 Q120,258 88,248 Z"/>
+
+            <!-- biceps -->
+            <path class="musclepart" data-muscle="biceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
+            <path class="musclepart" data-muscle="biceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+
+            <!-- forearms -->
+            <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
+            <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
+
+            <!-- hands (palms only, not tracked) -->
+            <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
+            <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
+
+            <!-- quads (angled stance: knee sits further out than hip) -->
+            <path class="musclepart" data-muscle="quads" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/>
+            <path class="musclepart" data-muscle="quads" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/>
+
+            <!-- calves seen from the front (not tracked here — calves rank is shown on the back view) -->
+            <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
+            <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
+
+            <!-- feet -->
+            <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
+            <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
+          </svg>
+          <div class="tiny" style="text-align:center; margin-top:8px">Zepředu</div>
+        </div>
+
+        <div class="bodyfig-col">
+          <svg viewBox="0 0 240 520" class="bodyfig">
+            <!-- head / neck -->
+            <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
+            <path class="bodyhair" d="M95,32 C95,15 106,6 120,6 C134,6 145,15 145,32 C145,44 140,54 132,60 C138,50 138,30 120,30 C102,30 102,50 108,60 C100,54 95,44 95,32 Z"/>
+            <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
+
+            <!-- traps -->
+            <path class="musclepart" data-muscle="back" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
+
+            <!-- rear shoulders (rear delts) -->
+            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+
+            <!-- lats + lower back -->
+            <path class="musclepart" data-muscle="back" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
+            <path class="musclepart" data-muscle="back" d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
+            <rect class="musclepart" data-muscle="back" x="104" y="166" width="32" height="34" rx="12"/>
+
+            <!-- triceps -->
+            <path class="musclepart" data-muscle="triceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
+            <path class="musclepart" data-muscle="triceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+
+            <!-- forearms -->
+            <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
+            <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
+
+            <!-- hands (palms only, not tracked) -->
+            <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
+            <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
+
+            <!-- glutes -->
+            <path class="musclepart" data-muscle="glutes" d="M120,206 C99,206 87,219 87,236 C87,252 101,264 120,264 C139,264 153,252 153,236 C153,219 141,206 120,206 Z"/>
+
+            <!-- hamstrings (angled stance: knee sits further out than hip) -->
+            <path class="musclepart" data-muscle="hamstrings" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/>
+            <path class="musclepart" data-muscle="hamstrings" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/>
+
+            <!-- calves (continue the outward angle down to the ankle) -->
+            <path class="musclepart" data-muscle="calves" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/>
+            <path class="musclepart" data-muscle="calves" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/>
+
+            <!-- feet -->
+            <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
+            <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
+          </svg>
+          <div class="tiny" style="text-align:center; margin-top:8px">Zezadu</div>
+        </div>
+      </div>
+      <div class="body-legend" id="bodyLegend"></div>
+    </div>
+
+    <div class="card">
+      <h2>📝 Zapsat PR <span class="tiny">(zapiš cvik, váhu a opakování — podle toho se počítají ranky a svítí postavička)</span></h2>
+      <div class="row2">
+        <div>
+          <label>Cvik</label>
+          <select id="prLogSelect"></select>
+        </div>
+        <div>
+          <label>Jiný cvik</label>
+          <input type="text" id="prLogNewName" placeholder="např. Bulharský dřep">
+        </div>
+      </div>
+      <div id="prLogMuscleWrap" style="display:none">
+        <label>Jakou svalovou skupinu nový cvik trénuje?</label>
+        <select id="prLogMuscle">
+          <option value="">— vyber svalovou skupinu —</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Váha (kg)</label>
+          <input type="number" id="prLogWeight" min="0" step="0.5">
+        </div>
+        <div>
+          <label>Opakování</label>
+          <input type="number" id="prLogReps" min="1" step="1">
+        </div>
+      </div>
+      <div class="flexend">
+        <button class="btn" id="prLogSaveBtn">Uložit PR</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Cviky &amp; Ranky <span class="tiny">(rank porovnává tvůj (věkem upravený) odhad maxima s běžným standardem pro daný sval)</span></h2>
+      <div id="muscleFilterChip" style="display:none; margin-bottom:12px"></div>
+      <div id="exerciseRanks" class="exlist"><div class="empty">Zatím žádné PR. Zapiš první výše.</div></div>
+    </div>
+  </section>
+
+  <!-- FRIENDS -->
+  <section id="tab-friends" style="display:none">
+    <div class="card">
+      <h2>👥 Přátelé <span class="tiny">(najdi kamaráda podle e-mailu, uvidíš jeho level, ranky a PR naživo)</span></h2>
+      <div class="row2">
+        <div style="flex:1">
+          <label>E-mail kamaráda</label>
+          <input type="email" id="friendEmailInput" placeholder="kamarad@email.cz">
+        </div>
+        <div style="display:flex; align-items:flex-end">
+          <button class="btn" id="addFriendBtn" style="margin-top:12px">Přidat přítele</button>
+        </div>
+      </div>
+      <div class="tiny" id="friendAddMsg" style="margin-top:8px"></div>
+    </div>
+    <div id="friendsList"><div class="empty">Zatím nemáš žádné přátele. Přidej někoho podle e-mailu výše.</div></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="tab-history" style="display:none">
+    <div class="card">
+      <h2>Historie tréninků</h2>
+      <div id="historyList"><div class="empty">Zatím žádné tréninky.</div></div>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section id="tab-achievements" style="display:none">
+    <div class="card">
+      <h2>🎖️ Herní ranky <span class="tiny">(rostou podle tvého levelu)</span></h2>
+      <div id="rankTrack" class="rank-track"></div>
+    </div>
+    <div class="card">
+      <h2>Odznaky</h2>
+      <div id="achList" class="ach-grid"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ---------- Firebase (auth + cloud sync + friends) ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyCDUiMfgHE4bEGkOvBERuH2wr2rlrgvcbQ",
+  authDomain: "ironrank-fd81f.firebaseapp.com",
+  projectId: "ironrank-fd81f",
+  storageBucket: "ironrank-fd81f.firebasestorage.app",
+  messagingSenderId: "681852528421",
+  appId: "1:681852528421:web:b73dd109e51f720dd1dccc",
+  measurementId: "G-EQSFPNG12C"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+// Web Push VAPID key — Firebase Console → Project settings → Cloud Messaging →
+// "Web configuration" → "Generate key pair". Real background push won't work until you paste it here.
+const FCM_VAPID_KEY = 'BHOJezZfSkHukRYLtzG7gmcPXW83KTULdGCJxvfSYS0LBWAjT6b0NyNvUSRdfsaJHD4R-fsoGK_KSZJBSRr8788';
+let currentUser = null;
+let authMode = 'login'; // 'login' | 'register'
+let isGuest = localStorage.getItem('ironrank_guest') === '1';
+let cloudSyncTimer = null;
+let friendUnsubscribers = {};
+
+const STORAGE_KEY = 'ironrank_data_v1';
+const RANK_TIERS = [
+  {name:'Bronze', mult:0.00, cls:'bronze', icon:'🥉'},
+  {name:'Silver', mult:0.50, cls:'silver', icon:'🥈'},
+  {name:'Gold', mult:0.75, cls:'gold', icon:'🥇'},
+  {name:'Platinum', mult:1.00, cls:'platinum', icon:'💎'},
+  {name:'Diamond', mult:1.30, cls:'diamond', icon:'💠'},
+  {name:'Legend', mult:1.60, cls:'legend', icon:'👑'},
+];
+// Rough "trained adult" reference 1RM (kg) per muscle group, used as the yardstick
+// for ranks. A rank compares your age-adjusted best e1RM against this, not just
+// your own first entry — so a genuinely strong lift ranks up immediately, even
+// the very first time you log it, instead of always starting flat at Bronze.
+const MUSCLE_REFERENCE_1RM = {
+  chest: 80, back: 100, shoulders: 50, biceps: 30, triceps: 40,
+  abs: 20, quads: 100, hamstrings: 80, glutes: 90, calves: 60,
+};
+const DEFAULT_REFERENCE_1RM = 60;
+const ACCOUNT_RANKS = [
+  {minLevel:1,  name:'Nováček',     icon:'🌱', color:'#8b93a3'},
+  {minLevel:3,  name:'Začátečník',  icon:'🔰', color:'#6fae62'},
+  {minLevel:5,  name:'Cvičenec',    icon:'🏃', color:'#4fd68a'},
+  {minLevel:8,  name:'Zapálený',    icon:'🔥', color:'#f2b134'},
+  {minLevel:11, name:'Silák',       icon:'🏋️', color:'#e0952a'},
+  {minLevel:15, name:'Bojovník',    icon:'⚔️', color:'#ff8c5a'},
+  {minLevel:19, name:'Válečník',    icon:'🛡️', color:'#ff6b6b'},
+  {minLevel:24, name:'Gladiátor',   icon:'🏛️', color:'#ff3b3b'},
+  {minLevel:29, name:'Šampion',     icon:'🏆', color:'#c026d3'},
+  {minLevel:35, name:'Mistr',       icon:'🥇', color:'#8a7ffb'},
+  {minLevel:41, name:'Elita',       icon:'⭐', color:'#38bdf8'},
+  {minLevel:48, name:'Veterán',     icon:'🎖️', color:'#7fd8e8'},
+  {minLevel:56, name:'Titán',       icon:'🗿', color:'#facc15'},
+  {minLevel:65, name:'Kolos',       icon:'🏔️', color:'#94a3b8'},
+  {minLevel:75, name:'Legenda',     icon:'👑', color:'#ff5da2'},
+  {minLevel:86, name:'Mýtus',       icon:'🌟', color:'#f472b6'},
+  {minLevel:100,name:'Nesmrtelný',  icon:'♾️', color:'#ffd700'},
+];
+const MUSCLE_GROUPS = [
+  {key:'chest', label:'Prsa'},
+  {key:'back', label:'Záda'},
+  {key:'shoulders', label:'Ramena'},
+  {key:'biceps', label:'Biceps'},
+  {key:'triceps', label:'Triceps'},
+  {key:'abs', label:'Břicho'},
+  {key:'quads', label:'Stehna (přední)'},
+  {key:'hamstrings', label:'Stehna (zadní)'},
+  {key:'glutes', label:'Hýždě'},
+  {key:'calves', label:'Lýtka'},
+];
+const DEFAULT_EXERCISE_MUSCLE = {
+  // Prsa
+  'Bench press':'chest',
+  'Šikmý bench press':'chest',
+  'Bench press s jednoručkami':'chest',
+  'Šikmý bench press s jednoručkami':'chest',
+  'Kliky':'chest',
+  'Kliky na bradlech (dipy)':'chest',
+  'Rozpažky s činkami':'chest',
+  'Křížení na kladce (cable crossover)':'chest',
+  'Motýlek (peck deck)':'chest',
+  'Tlak na chest pressu':'chest',
+  // Záda
+  'Mrtvý tah (Deadlift)':'back',
+  'Sumo mrtvý tah':'back',
+  'Přítah v předklonu':'back',
+  'Shyby':'back',
+  'Přítah podhmatem':'back',
+  'Veslování jednoručkou':'back',
+  'Veslování na kladce (seated row)':'back',
+  'Stahování kladky (lat pulldown)':'back',
+  'T-bar veslování':'back',
+  'Hyperextenze':'back',
+  'Shrugy (na trapézy)':'back',
+  // Ramena
+  'Vojenský tlak (OHP)':'shoulders',
+  'Tlak s činkami nad hlavu':'shoulders',
+  'Arnold tlak':'shoulders',
+  'Boční upažování':'shoulders',
+  'Zaklony (rear delt fly)':'shoulders',
+  'Vzpírání činky k bradě':'shoulders',
+  'Tlak na strojích (shoulder press)':'shoulders',
+  // Biceps
+  'Bicepsový zdvih':'biceps',
+  'Zdvih s EZ osou':'biceps',
+  'Kladivo (hammer curl)':'biceps',
+  'Zdvih na kladce':'biceps',
+  'Koncentrovaný zdvih':'biceps',
+  'Zdvih na Scott lavici':'biceps',
+  // Triceps
+  'Tricepsové kliky (dipy)':'triceps',
+  'Francouzský tlak':'triceps',
+  'Kliky na triceps u kladky':'triceps',
+  'Tlak na triceps obouruč':'triceps',
+  'Kickback s jednoručkou':'triceps',
+  'Úzký bench press':'triceps',
+  // Břicho
+  'Zkracovačky':'abs',
+  'Plank':'abs',
+  'Zvedání nohou':'abs',
+  'Ruský twist':'abs',
+  'Kolo (bicycle crunch)':'abs',
+  'Břicho na kladce (cable crunch)':'abs',
+  // Stehna přední
+  'Dřep (Squat)':'quads',
+  'Přední dřep (Front squat)':'quads',
+  'Hack dřep':'quads',
+  'Výpady':'quads',
+  'Bulharský dřep':'quads',
+  'Leg press':'quads',
+  'Předkopávání (leg extension)':'quads',
+  // Stehna zadní
+  'Rumunský mrtvý tah':'hamstrings',
+  'Mrtvý tah na jedné noze':'hamstrings',
+  'Leg curl':'hamstrings',
+  'Dobré ráno (good morning)':'hamstrings',
+  // Hýždě
+  'Hip thrust':'glutes',
+  'Glute bridge':'glutes',
+  'Sumo dřep':'glutes',
+  'Kop zánožmo na kladce':'glutes',
+  'Odtahování v kleku (donkey kick)':'glutes',
+  // Lýtka
+  'Výpony na lýtka':'calves',
+  'Výpony vsedě':'calves',
+  'Výpony v předklonu (donkey calf raise)':'calves',
+  'Výpony na leg pressu':'calves',
+};
+const DEFAULT_EXERCISES = Object.keys(DEFAULT_EXERCISE_MUSCLE);
+
+const ACHIEVEMENT_DEFS = [
+  // Tréninky
+  {id:'first_workout', icon:'🏋️', name:'První krok', desc:'Zapiš svůj první trénink.', check: s => s.workouts.length >= 1},
+  {id:'w10', icon:'🔟', name:'Do toho!', desc:'Zapiš 10 tréninků.', check: s => s.workouts.length >= 10},
+  {id:'w25', icon:'📅', name:'Rozjetý', desc:'Zapiš 25 tréninků.', check: s => s.workouts.length >= 25},
+  {id:'w50', icon:'🏅', name:'Zaseknutý v gymu', desc:'Zapiš 50 tréninků.', check: s => s.workouts.length >= 50},
+  {id:'w100', icon:'🏆', name:'Veterán', desc:'Zapiš 100 tréninků.', check: s => s.workouts.length >= 100},
+  {id:'w200', icon:'🛡️', name:'Nezastavitelný', desc:'Zapiš 200 tréninků.', check: s => s.workouts.length >= 200},
+  {id:'w365', icon:'🎖️', name:'Rok v gymu', desc:'Zapiš 365 tréninků.', check: s => s.workouts.length >= 365},
+  {id:'named_workout', icon:'✏️', name:'Pojmenovaný den', desc:'Zapiš trénink s vlastním názvem.', check: s => s.workouts.some(w => w.name && w.name.trim())},
+  // Streaky
+  {id:'streak3', icon:'🔥', name:'Rozjezd', desc:'3 dny v řadě.', check: s => computeStreak(s) >= 3},
+  {id:'streak7', icon:'🔥🔥', name:'Týden v ohni', desc:'7 dní v řadě.', check: s => computeStreak(s) >= 7},
+  {id:'streak14', icon:'🔥🔥', name:'Dva týdny', desc:'14 dní v řadě.', check: s => computeStreak(s) >= 14},
+  {id:'streak30', icon:'🔥🔥🔥', name:'Neúnavný', desc:'30 dní v řadě.', check: s => computeStreak(s) >= 30},
+  {id:'streak60', icon:'🌋', name:'Návyk', desc:'60 dní v řadě.', check: s => computeStreak(s) >= 60},
+  {id:'streak100', icon:'☄️', name:'Stovka v řadě', desc:'100 dní v řadě.', check: s => computeStreak(s) >= 100},
+  // Levely
+  {id:'lvl5', icon:'⭐', name:'Level 5', desc:'Dosáhni levelu 5.', check: s => levelFromXP(s.xp).level >= 5},
+  {id:'lvl10', icon:'🌟', name:'Level 10', desc:'Dosáhni levelu 10.', check: s => levelFromXP(s.xp).level >= 10},
+  {id:'lvl20', icon:'💫', name:'Level 20', desc:'Dosáhni levelu 20.', check: s => levelFromXP(s.xp).level >= 20},
+  {id:'lvl30', icon:'✨', name:'Level 30', desc:'Dosáhni levelu 30.', check: s => levelFromXP(s.xp).level >= 30},
+  {id:'lvl50', icon:'🌠', name:'Level 50', desc:'Dosáhni levelu 50.', check: s => levelFromXP(s.xp).level >= 50},
+  {id:'lvl75', icon:'🪐', name:'Level 75', desc:'Dosáhni levelu 75.', check: s => levelFromXP(s.xp).level >= 75},
+  {id:'lvl100', icon:'♾️', name:'Level 100', desc:'Dosáhni maximálního levelu 100.', check: s => levelFromXP(s.xp).level >= 100},
+  // Ranky u cviků
+  {id:'rankup1', icon:'📈', name:'Rank Up!', desc:'Poprvé postup na vyšší rank u cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 1)},
+  {id:'gold_rank', icon:'🥇', name:'Zlatý standard', desc:'Dosáhni Gold ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 2)},
+  {id:'platinum_rank', icon:'💎', name:'Platinový', desc:'Dosáhni Platinum ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 3)},
+  {id:'diamond_rank', icon:'💠', name:'Diamantový', desc:'Dosáhni Diamond ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 4)},
+  {id:'legend_rank', icon:'👑', name:'Legenda', desc:'Dosáhni Legend ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 5)},
+  {id:'all_muscles', icon:'🧍', name:'Celé tělo', desc:'Zapiš PR pro všech 10 svalových skupin.', check: s => MUSCLE_GROUPS.every(m => Object.entries(s.exercises).some(([n,e]) => s.exerciseMuscles[n] === m.key && rankIndex(e, m.key) >= 0))},
+  {id:'rank_master', icon:'🏵️', name:'Mistr těla', desc:'Dosáhni Gold ranku (nebo lepšího) ve všech 10 svalových skupinách.', check: s => MUSCLE_GROUPS.every(m => Object.entries(s.exercises).some(([n,e]) => s.exerciseMuscles[n] === m.key && rankIndex(e, m.key) >= 2))},
+  // PR a rozmanitost cviků
+  {id:'pr5', icon:'📋', name:'Sbírka PR', desc:'Zapiš PR u 5 různých cviků.', check: s => Object.values(s.manualPRs).filter(a => a && a.length > 0).length >= 5},
+  {id:'pr10', icon:'📚', name:'Encyklopedie', desc:'Zapiš PR u 10 různých cviků.', check: s => Object.values(s.manualPRs).filter(a => a && a.length > 0).length >= 10},
+  {id:'pr20', icon:'🗂️', name:'Kompletista', desc:'Zapiš PR u 20 různých cviků.', check: s => Object.values(s.manualPRs).filter(a => a && a.length > 0).length >= 20},
+  {id:'heavy100', icon:'🏋️‍♂️', name:'Stovka', desc:'Zapiš PR s váhou aspoň 100 kg.', check: s => Object.values(s.manualPRs).some(a => a && a.some(e => e.weight >= 100))},
+  {id:'heavy150', icon:'🦾', name:'Silák', desc:'Zapiš PR s váhou aspoň 150 kg.', check: s => Object.values(s.manualPRs).some(a => a && a.some(e => e.weight >= 150))},
+  {id:'heavy200', icon:'🦣', name:'Beast mode', desc:'Zapiš PR s váhou aspoň 200 kg.', check: s => Object.values(s.manualPRs).some(a => a && a.some(e => e.weight >= 200))},
+  {id:'reps20', icon:'🔁', name:'Vytrvalec', desc:'Zapiš PR se sérií aspoň 20 opakování.', check: s => Object.values(s.manualPRs).some(a => a && a.some(e => e.reps >= 20))},
+  // Objem
+  {id:'volume5000', icon:'🪨', name:'Rozehřátý', desc:'Zvedni celkem 5 000 kg.', check: s => totalVolume(s) >= 5000},
+  {id:'volume1000', icon:'💪', name:'Tunа síly', desc:'Zvedni celkem 10 000 kg.', check: s => totalVolume(s) >= 10000},
+  {id:'volume25000', icon:'🏔️', name:'Hora železa', desc:'Zvedni celkem 25 000 kg.', check: s => totalVolume(s) >= 25000},
+  {id:'volume50000', icon:'🌋', name:'Nezastavitelná síla', desc:'Zvedni celkem 50 000 kg.', check: s => totalVolume(s) >= 50000},
+];
+
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try{
+      const parsed = JSON.parse(raw);
+      if(!parsed.profile) parsed.profile = {age:null, name:'', avatar:null};
+      if(parsed.profile.name === undefined) parsed.profile.name = '';
+      if(parsed.profile.avatar === undefined) parsed.profile.avatar = null;
+      parsed.exerciseMuscles = {...DEFAULT_EXERCISE_MUSCLE, ...(parsed.exerciseMuscles || {})};
+      if(!parsed.manualPRs) parsed.manualPRs = {};
+      // migrate old single-object PR format to an append-only history array
+      Object.keys(parsed.manualPRs).forEach(k => {
+        if(!Array.isArray(parsed.manualPRs[k])) parsed.manualPRs[k] = [parsed.manualPRs[k]];
+      });
+      if(!Array.isArray(parsed.presets)) parsed.presets = [];
+      return parsed;
+    }catch(e){}
+  }
+  return {xp:0, workouts:[], exercises:{}, unlockedAchievements:[], profile:{age:null, name:'', avatar:null}, exerciseMuscles:{...DEFAULT_EXERCISE_MUSCLE}, manualPRs:{}, presets:[]};
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  scheduleCloudSync();
+}
+function scheduleCloudSync(){
+  if(!currentUser) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(() => {
+    db.collection('users').doc(currentUser.uid).set(state).catch(e => console.error('cloud sync failed', e));
+  }, 700);
+}
+
+let state = loadState();
+let currentWorkoutExercises = []; // [{name, sets:[{weight,reps}]}]
+let activePresetId = null;
+
+// ---------- Core formulas ----------
+function ageFactor(age){
+  // Dampens 1RM estimates for younger lifters, since a high-rep set on a
+  // still-developing lifter doesn't extrapolate to a low-rep max the same
+  // way it does for a mature adult lifter. Converges to 1.0 by age 18.
+  if(!age || age >= 18) return 1.0;
+  const a = Math.max(10, age);
+  return Math.max(0.65, Math.min(1, 0.65 + (a - 10) * (0.35 / 8)));
+}
+function epley1RM(weight, reps, age){
+  if(reps <= 1) return weight * ageFactor(age);
+  const cappedReps = Math.min(reps, 12); // Epley diverges badly past ~12 reps
+  return weight * (1 + cappedReps/30) * ageFactor(age);
+}
+function levelFromXP(xp){
+  // cumulative XP needed to reach level n grows; level up threshold = 100 * level^1.35
+  let level = 1, remaining = xp, needed = xpForLevel(1);
+  while(remaining >= needed){
+    remaining -= needed;
+    level++;
+    needed = xpForLevel(level);
+  }
+  return {level, into: remaining, needed};
+}
+function xpForLevel(level){ return Math.round(100 * Math.pow(level, 1.35)); }
+
+function getAccountRank(level){
+  let idx = 0;
+  for(let i=0;i<ACCOUNT_RANKS.length;i++){
+    if(level >= ACCOUNT_RANKS[i].minLevel) idx = i;
+  }
+  return {...ACCOUNT_RANKS[idx], idx, next: ACCOUNT_RANKS[idx+1] || null};
+}
+
+function computeStreak(s){
+  const days = [...new Set(s.workouts.map(w => w.date))].sort().reverse();
+  if(days.length === 0) return 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  let streak = 0;
+  let cursor = new Date(today);
+  const daySet = new Set(days);
+  // allow streak to count if most recent workout is today or yesterday
+  // (parse as local midnight, not UTC, so timezones ahead of UTC don't miscount)
+  const mostRecent = new Date(days[0] + 'T00:00:00');
+  const diffFromToday = Math.round((today - mostRecent)/86400000);
+  if(diffFromToday > 1) return 0;
+  cursor = new Date(mostRecent);
+  while(daySet.has(fmtDate(cursor))){
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return streak;
+}
+function fmtDate(d){
+  const dt = (d instanceof Date) ? d : new Date(d);
+  // local calendar date, not UTC — keeps "today" consistent across timezones ahead of UTC
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth()+1).padStart(2,'0');
+  const day = String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function totalVolume(s){
+  let v = 0;
+  s.workouts.forEach(w => w.exercises.forEach(e => e.sets.forEach(st => v += (st.weight||0)*(st.reps||0))));
+  return Math.round(v);
+}
+function rankIndex(exState, muscleKey){
+  if(!exState || exState.best == null) return -1;
+  const reference = MUSCLE_REFERENCE_1RM[muscleKey] || DEFAULT_REFERENCE_1RM;
+  const ratio = exState.best / reference;
+  let idx = 0;
+  for(let i=0;i<RANK_TIERS.length;i++){
+    if(ratio >= RANK_TIERS[i].mult) idx = i;
+  }
+  return idx;
+}
+function nextTierProgress(exState, muscleKey){
+  const idx = rankIndex(exState, muscleKey);
+  if(idx < 0) return {pct:0, cur:null, next:RANK_TIERS[0]};
+  const reference = MUSCLE_REFERENCE_1RM[muscleKey] || DEFAULT_REFERENCE_1RM;
+  const ratio = exState.best / reference;
+  if(idx >= RANK_TIERS.length-1) return {pct:100, cur:RANK_TIERS[idx], next:null};
+  const cur = RANK_TIERS[idx], next = RANK_TIERS[idx+1];
+  const pct = Math.max(0, Math.min(100, ((ratio-cur.mult)/(next.mult-cur.mult))*100));
+  return {pct, cur, next};
+}
+
+// ---------- XP awarding ----------
+function streakBonusPct(streak){
+  // longer streak = bigger % bonus on top of the workout's base xp, capped so it doesn't run away
+  return Math.min(streak || 0, 25) * 2; // +2 % per day in the streak, up to +50 %
+}
+function xpBreakdown(workout, streak){
+  let base = 15; // flat bonus for logging
+  workout.exercises.forEach(e => e.sets.forEach(s => {
+    base += Math.round(((s.weight||0) * (s.reps||0)) * 0.08) + 2; // per-set xp
+  }));
+  const pct = streakBonusPct(streak);
+  const bonus = Math.round(base * pct / 100);
+  return {base, pct, bonus, total: base + bonus};
+}
+function xpForWorkout(workout, streak){
+  return xpBreakdown(workout, streak).total;
+}
+
+// ---------- Rendering ----------
+function renderAll(){
+  renderHeader();
+  renderDashboard();
+  renderLogTab();
+  renderPRForm();
+  renderExercises();
+  renderBody();
+  renderHistory();
+  renderAchievements();
+  renderRankTrack();
+}
+
+function muscleBestRank(muscleKey){
+  let bestIdx = -1, bestExercise = null;
+  Object.entries(state.exercises).forEach(([name, ex]) => {
+    if(!ex.baseline) return;
+    if(state.exerciseMuscles[name] !== muscleKey) return;
+    const idx = rankIndex(ex, muscleKey);
+    if(idx > bestIdx){ bestIdx = idx; bestExercise = name; }
+  });
+  return {idx: bestIdx, exercise: bestExercise};
+}
+
+function renderBody(){
+  MUSCLE_GROUPS.forEach(m => {
+    const {idx, exercise} = muscleBestRank(m.key);
+    const tier = idx >= 0 ? RANK_TIERS[idx] : null;
+    const els = document.querySelectorAll(`[data-muscle="${m.key}"]`);
+    els.forEach(el => {
+      el.classList.toggle('lit', !!tier);
+      el.classList.toggle('active-filter', muscleFilter === m.key);
+      if(tier){
+        el.style.fill = `var(--${tier.cls})`;
+        el.style.filter = `drop-shadow(0 0 4px var(--${tier.cls})) drop-shadow(0 0 10px var(--${tier.cls})) drop-shadow(0 0 20px var(--${tier.cls}))`;
+      } else {
+        el.style.fill = '';
+        el.style.filter = '';
+      }
+      const existingTitle = el.querySelector('title');
+      if(existingTitle) existingTitle.remove();
+      const title = document.createElementNS('http://www.w3.org/2000/svg','title');
+      title.textContent = tier
+        ? `${m.label}: ${tier.name} (${exercise})`
+        : `${m.label}: zatím netrénováno`;
+      el.appendChild(title);
+    });
+  });
+
+  const legend = document.getElementById('bodyLegend');
+  legend.innerHTML = RANK_TIERS.map(t => `<span class="pill ${t.cls}">${t.icon} ${t.name}</span>`).join('') +
+    '<span class="pill unranked">⬤ Netrénováno</span>';
+}
+
+function renderHeader(){
+  const {level, into, needed} = levelFromXP(state.xp);
+  document.getElementById('lvlText').textContent = `Level ${level}`;
+  document.getElementById('xpText').textContent = `${into} / ${needed} XP`;
+  document.getElementById('xpBar').style.width = Math.min(100, (into/needed)*100) + '%';
+
+  const rank = getAccountRank(level);
+  const rankNameEl = document.getElementById('rankNameText');
+  rankNameEl.textContent = `${rank.icon} ${rank.name}`;
+  rankNameEl.style.color = rank.color;
+
+  const name = (state.profile.name || '').trim();
+  document.getElementById('headerName').textContent = name || 'IronRank';
+
+  const avatarEl = document.getElementById('headerAvatar');
+  const logoEl = document.getElementById('headerLogo');
+  if(state.profile.avatar){
+    avatarEl.src = state.profile.avatar;
+    avatarEl.style.display = 'block';
+    logoEl.style.display = 'none';
+  } else {
+    avatarEl.style.display = 'none';
+    logoEl.style.display = 'flex';
+    logoEl.textContent = name ? name.trim().slice(0,2).toUpperCase() : 'IR';
+  }
+}
+
+function renderRankCard(){
+  const {level} = levelFromXP(state.xp);
+  const rank = getAccountRank(level);
+  document.getElementById('rankCardIcon').textContent = rank.icon;
+  document.getElementById('rankCardIcon').style.boxShadow = `0 0 18px ${rank.color}55`;
+  document.getElementById('rankCardIcon').style.border = `2px solid ${rank.color}`;
+  const nameEl = document.getElementById('rankCardName');
+  nameEl.textContent = rank.name;
+  nameEl.style.color = rank.color;
+  document.getElementById('rankCardMeta').textContent = `Level ${level}`;
+  const bar = document.getElementById('rankCardBar');
+  const nextEl = document.getElementById('rankCardNext');
+  if(rank.next){
+    const start = rank.minLevel, end = rank.next.minLevel;
+    const pct = Math.max(0, Math.min(100, ((level - start) / (end - start)) * 100));
+    bar.style.width = pct + '%';
+    bar.style.background = `linear-gradient(90deg, ${rank.color}, ${rank.next.color})`;
+    nextEl.textContent = `Do ranku ${rank.next.icon} ${rank.next.name}: level ${end} (ještě ${Math.max(0, end - level)})`;
+  } else {
+    bar.style.width = '100%';
+    bar.style.background = rank.color;
+    nextEl.textContent = 'Nejvyšší rank dosažen!';
+  }
+}
+
+function renderRankTrack(){
+  const {level} = levelFromXP(state.xp);
+  const container = document.getElementById('rankTrack');
+  if(!container) return;
+  container.innerHTML = ACCOUNT_RANKS.map(r => {
+    const unlocked = level >= r.minLevel;
+    return `<div class="rank-tile ${unlocked ? 'unlocked' : ''}" style="${unlocked ? `border-color:${r.color}` : ''}">
+      <div class="ricon2">${r.icon}</div>
+      <h4 style="${unlocked ? `color:${r.color}` : ''}">${r.name}</h4>
+      <p>od levelu ${r.minLevel}</p>
+    </div>`;
+  }).join('');
+}
+
+function renderProfileHeader(){
+  const avatarEl = document.getElementById('dashAvatar');
+  if(state.profile.avatar){
+    avatarEl.src = state.profile.avatar;
+    avatarEl.style.display = 'block';
+  } else {
+    avatarEl.style.display = 'none';
+  }
+  document.getElementById('dashName').textContent = state.profile.name || 'Bez jména';
+  document.getElementById('dashAge').textContent = state.profile.age ? `${state.profile.age} let` : '';
+}
+
+function renderDashboard(){
+  renderProfileHeader();
+  renderRankCard();
+  const streak = computeStreak(state);
+  const streakEl = document.getElementById('streakStat');
+  document.getElementById('streakNum').textContent = streak;
+  streakEl.classList.toggle('broken', streak === 0 && state.workouts.length > 0);
+  const streakPct = streakBonusPct(streak);
+  document.getElementById('streakBonusLbl').textContent = streakPct > 0 ? `+${streakPct}% XP bonus` : '';
+  updateNotifyBtn();
+
+  document.getElementById('totalWorkouts').textContent = state.workouts.length;
+  document.getElementById('totalBadges').textContent = state.unlockedAchievements.length;
+
+  // top ranks
+  const entries = Object.entries(state.exercises).filter(([,e]) => e.baseline);
+  const container = document.getElementById('topRanks');
+  if(entries.length === 0){
+    container.innerHTML = '<div class="empty">Zatím nemáš zaznamenané žádné cviky.</div>';
+  } else {
+    entries.sort((a,b) => rankIndex(b[1], state.exerciseMuscles[b[0]]) - rankIndex(a[1], state.exerciseMuscles[a[0]]));
+    container.innerHTML = entries.slice(0,6).map(([name, ex]) => exCardHTML(name, ex)).join('');
+  }
+
+  // last workout
+  const lw = document.getElementById('lastWorkout');
+  if(state.workouts.length === 0){
+    lw.innerHTML = '<div class="empty">Ještě jsi nic nezapsal. Mrkni na záložku „Zapsat trénink“.</div>';
+  } else {
+    const last = state.workouts[state.workouts.length-1];
+    lw.innerHTML = historyItemHTML(last);
+  }
+}
+
+function exCardHTML(name, ex){
+  const muscleKey = state.exerciseMuscles[name];
+  const idx = rankIndex(ex, muscleKey);
+  const tier = idx >= 0 ? RANK_TIERS[idx] : null;
+  const prog = nextTierProgress(ex, muscleKey);
+  const pr = ex.bestSet;
+  const muscleGroup = MUSCLE_GROUPS.find(m => m.key === muscleKey);
+  return `<div class="excard" data-exercise-muscle="${muscleKey || ''}">
+    <div class="excard-head">
+      <h3>${escapeHtml(name)}</h3>
+      <button class="pr-edit-btn" data-editpr="${escapeHtml(name)}" title="Upravit PR">✎</button>
+    </div>
+    ${muscleGroup ? `<div class="tiny" style="margin-bottom:4px">💪 ${muscleGroup.label}</div>` : ''}
+    <a href="${exerciseDemoUrl(name)}" target="_blank" rel="noopener" class="tiny" style="display:inline-block; margin-bottom:6px">▶ Jak se to dělá</a>
+    ${pr ? `<div class="pr-line"><span class="pr-value">${pr.weight}&nbsp;kg × ${pr.reps}</span><span class="tiny">PR${pr.manual ? ' · ručně' : ''} · ${pr.date}</span></div>` : ''}
+    <div class="best">Odh. maximum (1RM): <b>${ex.best.toFixed(1)} kg</b>${state.profile.age && state.profile.age < 18 ? ' <span class="tiny">(upraveno pro věk '+state.profile.age+')</span>' : ''}</div>
+    ${tier ? `<span class="pill ${tier.cls}">${tier.icon} ${tier.name}</span>` : '<span class="pill unranked">Bez ranku</span>'}
+    <div class="progress-mini"><div style="width:${prog.pct}%"></div></div>
+    <div class="tiny" style="margin-top:6px">${prog.next ? `Do ranku ${prog.next.name}: ${Math.round(prog.pct)}%` : 'Max rank dosažen!'}</div>
+  </div>`;
+}
+
+function buildExerciseOptionsHTML(placeholderText){
+  const allNames = new Set([...DEFAULT_EXERCISES, ...Object.keys(state.exercises), ...Object.keys(state.exerciseMuscles)]);
+  const byGroup = {};
+  const ungrouped = [];
+  allNames.forEach(n => {
+    const muscle = state.exerciseMuscles[n];
+    const group = MUSCLE_GROUPS.find(m => m.key === muscle);
+    if(group){
+      (byGroup[group.label] = byGroup[group.label] || []).push(n);
+    } else {
+      ungrouped.push(n);
+    }
+  });
+  let optsHtml = `<option value="" disabled selected>${placeholderText.replace('{n}', allNames.size)}</option>`;
+  MUSCLE_GROUPS.forEach(g => {
+    const names = (byGroup[g.label] || []).sort();
+    if(names.length){
+      optsHtml += `<optgroup label="${g.label}">` + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') + `</optgroup>`;
+    }
+  });
+  if(ungrouped.length){
+    optsHtml += `<optgroup label="Ostatní">` + ungrouped.sort().map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') + `</optgroup>`;
+  }
+  return {optsHtml, count: allNames.size};
+}
+
+function renderLogTab(){
+  const sel = document.getElementById('exSelect');
+  const prevValue = sel.value;
+  const {optsHtml, count} = buildExerciseOptionsHTML('— vyber cvik ({n} celkem) —');
+  sel.innerHTML = optsHtml;
+  if(prevValue && [...sel.options].some(o => o.value === prevValue)) sel.value = prevValue;
+  document.getElementById('exCount').textContent = `(${count} cviků v nabídce)`;
+  updateDemoLink();
+
+  if(!document.getElementById('workoutDate').value){
+    document.getElementById('workoutDate').value = fmtDate(new Date());
+  }
+
+  const streakPct = streakBonusPct(computeStreak(state));
+  document.getElementById('logStreakBonusLbl').textContent = streakPct > 0
+    ? `🔥 Aktuální bonus za řadu: +${streakPct}% XP`
+    : '';
+
+  renderPresetsRow();
+
+  const preset = activePresetId ? presetById(activePresetId) : null;
+  const presetWrap = document.getElementById('addToPresetWrap');
+  if(preset){
+    presetWrap.style.display = 'flex';
+    document.getElementById('activePresetNameLbl').textContent = preset.name;
+  } else {
+    presetWrap.style.display = 'none';
+  }
+
+  renderCurrentExercises();
+}
+
+function presetById(id){
+  return (state.presets || []).find(p => p.id === id);
+}
+
+function renderPresetsRow(){
+  const wrap = document.getElementById('presetsRow');
+  const presets = state.presets || [];
+  const chips = presets.map(p => `<button type="button" class="btn secondary small" data-applypreset="${p.id}">⚡ ${escapeHtml(p.name)} <span class="tiny">(${p.exercises.length})</span></button>`).join('');
+  wrap.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center">
+    ${chips}
+    <button type="button" class="btn secondary small" id="managePresetsBtn">⚙ Spravovat presety</button>
+  </div>`;
+  document.getElementById('managePresetsBtn').addEventListener('click', openPresetModal);
+}
+
+function applyPreset(id){
+  const preset = presetById(id);
+  if(!preset) return;
+  preset.exercises.forEach(name => {
+    if(!currentWorkoutExercises.some(e => e.name === name)){
+      currentWorkoutExercises.push({name, sets:[{weight:'', reps:''}]});
+    }
+  });
+  activePresetId = id;
+  renderLogTab();
+  showToast(`Preset „${preset.name}“ načten (${preset.exercises.length} cviků)`);
+}
+
+function openPresetModal(){
+  renderPresetManageList();
+  document.getElementById('presetModal').style.display = 'flex';
+}
+function closePresetModal(){
+  document.getElementById('presetModal').style.display = 'none';
+}
+function renderPresetManageList(){
+  const wrap = document.getElementById('presetManageList');
+  const presets = state.presets || [];
+  if(presets.length === 0){
+    wrap.innerHTML = '<div class="empty">Zatím nemáš žádný preset. Přidej cviky do tréninku a ulož je tlačítkem „💾 Uložit jako preset“, nebo si tu založ prázdný.</div>';
+    return;
+  }
+  const {optsHtml} = buildExerciseOptionsHTML('— přidat cvik do presetu —');
+  wrap.innerHTML = presets.map(p => `
+    <div class="exercise-block">
+      <div class="ehead">
+        <b>${escapeHtml(p.name)}</b>
+        <button class="btn danger small" data-delpreset="${p.id}">Smazat preset</button>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin:10px 0">
+        ${p.exercises.length ? p.exercises.map((n, idx) => `<span class="pill unranked">${escapeHtml(n)} <button data-rmpresetex="${p.id}" data-idx="${idx}" style="background:none; border:none; color:inherit; cursor:pointer; font-weight:800; margin-left:2px">✕</button></span>`).join('') : '<span class="tiny">Žádné cviky</span>'}
+      </div>
+      <div class="row3">
+        <div><select id="presetAddSel_${p.id}">${optsHtml}</select></div>
+        <div><input type="text" id="presetAddInput_${p.id}" placeholder="jiný cvik"></div>
+        <button class="btn secondary small" data-addtopreset="${p.id}">+ Přidat</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPRForm(){
+  const sel = document.getElementById('prLogSelect');
+  const prevValue = sel.value;
+  const {optsHtml} = buildExerciseOptionsHTML('— vyber cvik —');
+  sel.innerHTML = optsHtml;
+  if(prevValue && [...sel.options].some(o => o.value === prevValue)) sel.value = prevValue;
+
+  const muscleSel = document.getElementById('prLogMuscle');
+  if(muscleSel.options.length <= 1){
+    muscleSel.innerHTML = '<option value="">— vyber svalovou skupinu —</option>' +
+      MUSCLE_GROUPS.map(m => `<option value="${m.key}">${m.label}</option>`).join('');
+  }
+}
+
+function updateDemoLink(){
+  const newName = document.getElementById('newExName').value.trim();
+  const selected = document.getElementById('exSelect').value;
+  const name = newName || selected;
+  const link = document.getElementById('demoLink');
+  if(name){
+    link.href = exerciseDemoUrl(name);
+    link.style.display = 'inline';
+    link.textContent = `▶ Ukázat „${name}“ na YouTube`;
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+function renderCurrentExercises(){
+  const container = document.getElementById('currentExercises');
+  if(currentWorkoutExercises.length === 0){
+    container.innerHTML = '<div class="empty">Zatím žádný cvik v tréninku. Přidej cvik výše.</div>';
+    return;
+  }
+  container.innerHTML = currentWorkoutExercises.map((ex, ei) => `
+    <div class="exercise-block">
+      <div class="ehead">
+        <b>${escapeHtml(ex.name)}</b>
+        <div style="display:flex; gap:8px; align-items:center">
+          <a href="${exerciseDemoUrl(ex.name)}" target="_blank" rel="noopener" class="tiny">▶ ukázka</a>
+          <button class="btn danger small" onclick="removeExercise(${ei})">Odstranit</button>
+        </div>
+      </div>
+      <div class="setlist">
+        ${ex.sets.map((s, si) => `
+          <div class="setrow">
+            <div class="idx">${si+1}</div>
+            <input type="number" min="0" step="0.5" placeholder="kg" value="${s.weight ?? ''}" onchange="updateSet(${ei},${si},'weight',this.value)">
+            <input type="number" min="0" step="1" placeholder="reps" value="${s.reps ?? ''}" onchange="updateSet(${ei},${si},'reps',this.value)">
+            <button class="btn secondary small" onclick="removeSet(${ei},${si})">✕</button>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn secondary small" style="margin-top:8px" onclick="addSet(${ei})">+ Přidat sérii</button>
+    </div>
+  `).join('');
+}
+
+let muscleFilter = null;
+function setMuscleFilter(key){
+  muscleFilter = (muscleFilter === key) ? null : key;
+  renderBody();
+  renderExercises();
+  if(muscleFilter){
+    document.getElementById('exerciseRanks').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+}
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('.musclepart');
+  if(el && el.dataset.muscle) setMuscleFilter(el.dataset.muscle);
+});
+
+function renderExercises(){
+  const container = document.getElementById('exerciseRanks');
+  const chipEl = document.getElementById('muscleFilterChip');
+  let entries = Object.entries(state.exercises).filter(([,e]) => e.baseline);
+
+  if(muscleFilter){
+    const group = MUSCLE_GROUPS.find(m => m.key === muscleFilter);
+    entries = entries.filter(([name]) => state.exerciseMuscles[name] === muscleFilter);
+    chipEl.style.display = 'block';
+    chipEl.innerHTML = `<span class="filter-chip">💪 Filtr: ${group ? group.label : muscleFilter} <button id="clearMuscleFilter">✕</button></span>`;
+    document.getElementById('clearMuscleFilter').addEventListener('click', () => setMuscleFilter(muscleFilter));
+  } else {
+    chipEl.style.display = 'none';
+    chipEl.innerHTML = '';
+  }
+
+  if(entries.length === 0){
+    container.innerHTML = muscleFilter
+      ? '<div class="empty">U tohoto svalu zatím nemáš žádný zapsaný cvik.</div>'
+      : '<div class="empty">Zatím žádné cviky. Zapiš trénink a objeví se tu.</div>';
+    return;
+  }
+  entries.sort((a,b) => rankIndex(b[1], state.exerciseMuscles[b[0]]) - rankIndex(a[1], state.exerciseMuscles[a[0]]));
+  container.innerHTML = entries.map(([name, ex]) => exCardHTML(name, ex)).join('');
+}
+
+function historyItemHTML(w){
+  const xp = w.xpEarned != null ? w.xpEarned : xpForWorkout(w);
+  return `<div class="history-item">
+    <div class="hdate"><span>${w.name ? `${escapeHtml(w.name)} · ${w.date}` : w.date}</span><span class="xp-tag">+${xp} XP</span></div>
+    ${w.exercises.map(e => `<div class="hex">${escapeHtml(e.name)}: ${e.sets.map(s => `${s.weight}kg×${s.reps}`).join(', ')}</div>`).join('')}
+  </div>`;
+}
+
+function renderHistory(){
+  const container = document.getElementById('historyList');
+  if(state.workouts.length === 0){
+    container.innerHTML = '<div class="empty">Zatím žádné tréninky.</div>';
+    return;
+  }
+  const sorted = [...state.workouts].sort((a,b) => b.date.localeCompare(a.date));
+  container.innerHTML = sorted.map(historyItemHTML).join('');
+}
+
+function renderAchievements(){
+  const container = document.getElementById('achList');
+  container.innerHTML = ACHIEVEMENT_DEFS.map(a => {
+    const unlocked = state.unlockedAchievements.includes(a.id);
+    return `<div class="ach ${unlocked ? 'unlocked' : ''}">
+      <div class="aicon">${a.icon}</div>
+      <h4>${a.name}</h4>
+      <p>${a.desc}</p>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+}
+
+function exerciseDemoUrl(name){
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(name + ' cvik technika provedení')}`;
+}
+
+// ---------- Interactions ----------
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.app > section').forEach(s => s.style.display = 'none');
+    document.getElementById('tab-' + btn.dataset.tab).style.display = '';
+  });
+});
+
+document.getElementById('newExName').addEventListener('input', updateDemoLink);
+document.getElementById('exSelect').addEventListener('change', updateDemoLink);
+
+document.getElementById('addExerciseBtn').addEventListener('click', () => {
+  const newName = document.getElementById('newExName').value.trim();
+  const selected = document.getElementById('exSelect').value;
+  const name = newName || selected;
+  if(!name) return;
+  currentWorkoutExercises.push({name, sets:[{weight:'', reps:''}]});
+  const addToPresetCheck = document.getElementById('addToPresetCheck');
+  if(activePresetId && addToPresetCheck && addToPresetCheck.checked){
+    const preset = presetById(activePresetId);
+    if(preset && !preset.exercises.includes(name)){
+      preset.exercises.push(name);
+      saveState();
+      showToast(`„${name}“ přidán i do presetu „${preset.name}“`);
+    }
+  }
+  document.getElementById('newExName').value = '';
+  document.getElementById('exSelect').value = '';
+  renderLogTab();
+  renderCurrentExercises();
+});
+
+document.getElementById('saveAsPresetBtn').addEventListener('click', async () => {
+  if(currentWorkoutExercises.length === 0){
+    showToast('Nejdřív přidej alespoň jeden cvik do tréninku.', 'warn');
+    return;
+  }
+  const existingName = activePresetId ? (presetById(activePresetId) || {}).name : '';
+  const input = await showTextPrompt('Název presetu', 'Např. Záda, Nohy, Push day...', existingName || '');
+  if(!input) return;
+  const trimmed = input.trim();
+  if(!trimmed) return;
+  if(!state.presets) state.presets = [];
+  const names = currentWorkoutExercises.map(e => e.name);
+  const existing = state.presets.find(p => p.name.toLowerCase() === trimmed.toLowerCase());
+  if(existing){
+    names.forEach(n => { if(!existing.exercises.includes(n)) existing.exercises.push(n); });
+    activePresetId = existing.id;
+    saveState();
+    renderLogTab();
+    showToast(`Preset „${existing.name}“ aktualizován`);
+  } else {
+    const preset = {id: 'p_' + Date.now().toString(36), name: trimmed, exercises: [...names]};
+    state.presets.push(preset);
+    activePresetId = preset.id;
+    saveState();
+    renderLogTab();
+    showToast(`Preset „${trimmed}“ uložen`);
+  }
+});
+
+document.getElementById('newPresetBtn').addEventListener('click', async () => {
+  const input = await showTextPrompt('Název nového presetu', 'Např. Nohy, Push day, Ramena...', '');
+  if(!input) return;
+  const trimmed = input.trim();
+  if(!trimmed) return;
+  if(!state.presets) state.presets = [];
+  state.presets.push({id: 'p_' + Date.now().toString(36), name: trimmed, exercises: []});
+  saveState();
+  renderPresetManageList();
+  renderPresetsRow();
+});
+document.getElementById('closePresetModalBtn').addEventListener('click', closePresetModal);
+
+document.addEventListener('click', async (e) => {
+  const apply = e.target.closest('[data-applypreset]');
+  if(apply){ applyPreset(apply.dataset.applypreset); return; }
+
+  const del = e.target.closest('[data-delpreset]');
+  if(del){
+    const preset = presetById(del.dataset.delpreset);
+    if(preset && await showConfirm(`Smazat preset „${preset.name}“?`)){
+      state.presets = (state.presets || []).filter(p => p.id !== preset.id);
+      if(activePresetId === preset.id) activePresetId = null;
+      saveState();
+      renderPresetManageList();
+      renderPresetsRow();
+      renderLogTab();
+    }
+    return;
+  }
+
+  const rm = e.target.closest('[data-rmpresetex]');
+  if(rm){
+    const preset = presetById(rm.dataset.rmpresetex);
+    if(preset){
+      preset.exercises.splice(parseInt(rm.dataset.idx, 10), 1);
+      saveState();
+      renderPresetManageList();
+      renderPresetsRow();
+    }
+    return;
+  }
+
+  const addBtn = e.target.closest('[data-addtopreset]');
+  if(addBtn){
+    const pid = addBtn.dataset.addtopreset;
+    const sel = document.getElementById(`presetAddSel_${pid}`);
+    const inp = document.getElementById(`presetAddInput_${pid}`);
+    const name = (inp.value.trim() || sel.value);
+    if(!name) return;
+    const preset = presetById(pid);
+    if(preset && !preset.exercises.includes(name)){
+      preset.exercises.push(name);
+      saveState();
+    }
+    inp.value = ''; sel.value = '';
+    renderPresetManageList();
+    renderPresetsRow();
+    return;
+  }
+});
+
+document.getElementById('prLogNewName').addEventListener('input', () => {
+  const newName = document.getElementById('prLogNewName').value.trim();
+  const needsMuscle = newName && !state.exerciseMuscles[newName];
+  document.getElementById('prLogMuscleWrap').style.display = needsMuscle ? 'block' : 'none';
+});
+
+document.getElementById('prLogSaveBtn').addEventListener('click', () => {
+  const newName = document.getElementById('prLogNewName').value.trim();
+  const selected = document.getElementById('prLogSelect').value;
+  const name = newName || selected;
+  const weight = parseFloat(document.getElementById('prLogWeight').value);
+  const reps = parseInt(document.getElementById('prLogReps').value, 10);
+  if(!name){
+    showToast('Vyber cvik nebo zadej jeho název.', 'warn');
+    return;
+  }
+  if(!weight || weight <= 0 || !reps || reps <= 0){
+    showToast('Zadej platnou váhu a počet opakování.', 'warn');
+    return;
+  }
+  if(newName && !state.exerciseMuscles[newName]){
+    const muscle = document.getElementById('prLogMuscle').value;
+    if(!muscle){
+      showToast('U nového cviku prosím vyber, jakou svalovou skupinu trénuje.', 'warn');
+      return;
+    }
+    state.exerciseMuscles[name] = muscle;
+  }
+  if(!state.manualPRs[name]) state.manualPRs[name] = [];
+  state.manualPRs[name].push({weight, reps, date: fmtDate(new Date())});
+  recomputeExerciseStats();
+  const newlyUnlocked = checkAchievements();
+  saveState();
+
+  document.getElementById('prLogNewName').value = '';
+  document.getElementById('prLogSelect').value = '';
+  document.getElementById('prLogMuscleWrap').style.display = 'none';
+  document.getElementById('prLogWeight').value = '';
+  document.getElementById('prLogReps').value = '';
+
+  renderAll();
+  showToast(`PR uloženo: ${name} — ${weight} kg × ${reps}`);
+  newlyUnlocked.forEach(a => showToast(`Odznak odemčen: ${a.icon} ${a.name}`));
+});
+
+function addSet(ei){
+  currentWorkoutExercises[ei].sets.push({weight:'', reps:''});
+  renderCurrentExercises();
+}
+function removeSet(ei, si){
+  currentWorkoutExercises[ei].sets.splice(si,1);
+  renderCurrentExercises();
+}
+function removeExercise(ei){
+  currentWorkoutExercises.splice(ei,1);
+  renderCurrentExercises();
+}
+function updateSet(ei, si, field, value){
+  currentWorkoutExercises[ei].sets[si][field] = value === '' ? '' : parseFloat(value);
+}
+
+document.getElementById('clearWorkoutBtn').addEventListener('click', async () => {
+  if(currentWorkoutExercises.length && !await showConfirm('Zrušit rozepsaný trénink?')) return;
+  currentWorkoutExercises = [];
+  activePresetId = null;
+  renderLogTab();
+});
+
+document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
+  const date = document.getElementById('workoutDate').value || fmtDate(new Date());
+  const name = document.getElementById('workoutName').value.trim();
+  const cleanExercises = currentWorkoutExercises
+    .map(e => ({name: e.name, sets: e.sets.filter(s => s.weight > 0 && s.reps > 0)}))
+    .filter(e => e.sets.length > 0);
+  if(cleanExercises.length === 0){
+    showToast('Přidej alespoň jeden cvik s vyplněnou váhou a počtem opakování.', 'warn');
+    return;
+  }
+  const workout = {date, name, exercises: cleanExercises};
+  state.workouts.push(workout);
+
+  const streak = computeStreak(state);
+  const breakdown = xpBreakdown(workout, streak);
+  const xpGain = breakdown.total;
+  workout.xpEarned = xpGain;
+  const beforeLevel = levelFromXP(state.xp).level;
+  const beforeRank = getAccountRank(beforeLevel);
+  state.xp += xpGain;
+  const afterLevel = levelFromXP(state.xp).level;
+  const afterRank = getAccountRank(afterLevel);
+
+  currentWorkoutExercises = [];
+  activePresetId = null;
+  document.getElementById('workoutName').value = '';
+  const newlyUnlocked = checkAchievements();
+  saveState();
+  renderAll();
+  document.querySelector('nav.tabs button[data-tab="dashboard"]').click();
+
+  let msg = `Trénink uložen! +${xpGain} XP`;
+  if(breakdown.pct > 0) msg += ` (řada ${streak} dní: +${breakdown.pct}% XP bonus)`;
+  if(afterLevel > beforeLevel) msg += ` — Level up! Jsi teď level ${afterLevel} 🎉`;
+  showToast(msg);
+  if(afterRank.name !== beforeRank.name){
+    showToast(`Nový rank: ${afterRank.icon} ${afterRank.name}!`);
+  }
+  newlyUnlocked.forEach(a => showToast(`Odznak odemčen: ${a.icon} ${a.name}`));
+});
+
+function checkAchievements(){
+  const newly = [];
+  ACHIEVEMENT_DEFS.forEach(a => {
+    if(!state.unlockedAchievements.includes(a.id) && a.check(state)){
+      state.unlockedAchievements.push(a.id);
+      newly.push(a);
+    }
+  });
+  return newly;
+}
+
+function showToast(msg, type){
+  const t = document.createElement('div');
+  t.className = type === 'warn' ? 'toast warn' : 'toast';
+  t.innerHTML = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4200);
+}
+
+// ---------- Custom prompt/confirm (native prompt()/confirm()/alert() are unreliable in installed PWAs) ----------
+let _textPromptResolve = null;
+function showTextPrompt(title, desc, defaultValue){
+  return new Promise(resolve => {
+    _textPromptResolve = resolve;
+    document.getElementById('textPromptTitle').textContent = title;
+    const descEl = document.getElementById('textPromptDesc');
+    descEl.textContent = desc || '';
+    descEl.style.display = desc ? 'block' : 'none';
+    const input = document.getElementById('textPromptInput');
+    input.value = defaultValue || '';
+    document.getElementById('textPromptModal').style.display = 'flex';
+    setTimeout(() => input.focus(), 50);
+  });
+}
+function closeTextPrompt(value){
+  document.getElementById('textPromptModal').style.display = 'none';
+  if(_textPromptResolve){ _textPromptResolve(value); _textPromptResolve = null; }
+}
+document.getElementById('textPromptOkBtn').addEventListener('click', () => {
+  closeTextPrompt(document.getElementById('textPromptInput').value.trim() || null);
+});
+document.getElementById('textPromptCancelBtn').addEventListener('click', () => closeTextPrompt(null));
+document.getElementById('textPromptInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    closeTextPrompt(document.getElementById('textPromptInput').value.trim() || null);
+  }
+});
+
+let _confirmResolve = null;
+function showConfirm(message){
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('confirmModalMsg').textContent = message;
+    document.getElementById('confirmModal').style.display = 'flex';
+  });
+}
+function closeConfirm(value){
+  document.getElementById('confirmModal').style.display = 'none';
+  if(_confirmResolve){ _confirmResolve(value); _confirmResolve = null; }
+}
+document.getElementById('confirmModalOkBtn').addEventListener('click', () => closeConfirm(true));
+document.getElementById('confirmModalCancelBtn').addEventListener('click', () => closeConfirm(false));
+
+// ---------- Streak notifications ----------
+const NOTIFY_KEY = 'ironrank_notify_streak';
+const NOTIFY_LAST_KEY = 'ironrank_last_streak_notify';
+function notifyEnabled(){
+  return localStorage.getItem(NOTIFY_KEY) === '1';
+}
+function updateNotifyBtn(){
+  const btn = document.getElementById('notifyToggleBtn');
+  if(!btn) return;
+  if(!('Notification' in window)){
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'inline';
+  if(Notification.permission === 'denied'){
+    btn.textContent = '🔕 Oznámení blokovaná (povol je v nastavení prohlížeče)';
+    return;
+  }
+  btn.textContent = (notifyEnabled() && Notification.permission === 'granted')
+    ? '🔔 Oznámení o řadě zapnutá (vypnout)'
+    : '🔔 Povolit oznámení o řadě';
+}
+document.getElementById('notifyToggleBtn').addEventListener('click', async () => {
+  if(notifyEnabled()){
+    localStorage.setItem(NOTIFY_KEY, '0');
+    updateNotifyBtn();
+    showToast('Oznámení o řadě vypnuta.');
+    return;
+  }
+  if(!('Notification' in window)){
+    showToast('Tenhle prohlížeč oznámení nepodporuje.', 'warn');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if(perm === 'granted'){
+    localStorage.setItem(NOTIFY_KEY, '1');
+    showToast('🔔 Oznámení zapnuta — připomeneme ti to, když si otevřeš appku a ještě jsi ten den necvičil/a.');
+    maybeSendStreakReminder(true);
+    registerPushToken();
+  } else {
+    showToast('Oznámení nejsou povolena.', 'warn');
+  }
+  updateNotifyBtn();
+});
+
+// ---------- Real background push (FCM) — works even when the app is fully closed ----------
+async function registerPushToken(){
+  if(!currentUser){
+    // push tokens are tied to a cloud account (state.fcmToken syncs via saveState);
+    // guests only get the local "app opened" reminder, not real background push
+    return;
+  }
+  if(!('serviceWorker' in navigator) || !firebase.messaging || !firebase.messaging.isSupported || !firebase.messaging.isSupported()){
+    return;
+  }
+  if(FCM_VAPID_KEY === 'PASTE_YOUR_VAPID_KEY_HERE'){
+    console.warn('FCM_VAPID_KEY není nastavený — vlož ho z Firebase Console (Cloud Messaging → Web configuration).');
+    return;
+  }
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    const messaging = firebase.messaging();
+    const token = await messaging.getToken({vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg});
+    if(token && token !== state.fcmToken){
+      state.fcmToken = token;
+      saveState();
+    }
+  }catch(e){
+    console.error('FCM token error', e);
+  }
+}
+
+function czechDaySuffix(n){
+  if(n === 1) return 'den';
+  if(n >= 2 && n <= 4) return 'dny';
+  return 'dní';
+}
+function maybeSendStreakReminder(force){
+  if(!notifyEnabled() || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const today = fmtDate(new Date());
+  const trainedToday = state.workouts.some(w => w.date === today);
+  if(trainedToday) return;
+  if(!force){
+    if(new Date().getHours() < 17) return; // only nudge in the evening
+    if(localStorage.getItem(NOTIFY_LAST_KEY) === today) return; // once per day
+  }
+  const streak = computeStreak(state);
+  const body = streak > 0
+    ? `Máš řadu ${streak} ${czechDaySuffix(streak)} — dnes ještě nemáš zapsaný trénink. Nezlom si ji!`
+    : 'Dnes ještě nemáš zapsaný trénink. Pojď na to! 💪';
+  const title = '🔥 IronRank — denní řada';
+  if('serviceWorker' in navigator && navigator.serviceWorker.ready){
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification(title, {body, icon:'icon-192.png', badge:'icon-192.png', tag:'streak-reminder'});
+    }).catch(() => { try{ new Notification(title, {body, icon:'icon-192.png'}); }catch(e){} });
+  } else {
+    try{ new Notification(title, {body, icon:'icon-192.png'}); }catch(e){}
+  }
+  localStorage.setItem(NOTIFY_LAST_KEY, today);
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') maybeSendStreakReminder(false);
+});
+
+function recomputeExerciseStats(){
+  // Ranks are driven only by manually logged PRs (state.manualPRs), not by workout
+  // history — the "Zapsat trénink" journal is separate and has no effect here.
+  const stats = {};
+  Object.entries(state.manualPRs).forEach(([name, entries]) => {
+    if(!entries || entries.length === 0) return;
+    let baseline = null, best = -Infinity, bestSet = null;
+    entries.forEach((pr, i) => {
+      const e1rm = epley1RM(pr.weight, pr.reps, state.profile.age);
+      if(i === 0) baseline = e1rm;
+      if(e1rm >= best){ best = e1rm; bestSet = {weight: pr.weight, reps: pr.reps, date: pr.date, manual: true}; }
+    });
+    stats[name] = {baseline, best, bestSet};
+  });
+  state.exercises = stats;
+}
+
+// ---------- PR editing ----------
+let prEditingExercise = null;
+function openPRModal(name){
+  const ex = state.exercises[name];
+  if(!ex) return;
+  prEditingExercise = name;
+  document.getElementById('prModalTitle').textContent = `Upravit PR — ${name}`;
+  document.getElementById('prWeightInput').value = ex.bestSet ? ex.bestSet.weight : '';
+  document.getElementById('prRepsInput').value = ex.bestSet ? ex.bestSet.reps : '';
+  document.getElementById('prModal').style.display = 'flex';
+}
+function closePRModal(){
+  document.getElementById('prModal').style.display = 'none';
+  prEditingExercise = null;
+}
+document.getElementById('cancelPRBtn').addEventListener('click', closePRModal);
+document.getElementById('savePRBtn').addEventListener('click', () => {
+  const w = parseFloat(document.getElementById('prWeightInput').value);
+  const r = parseInt(document.getElementById('prRepsInput').value, 10);
+  if(!w || w <= 0 || !r || r <= 0){
+    showToast('Zadej platnou váhu a počet opakování.', 'warn');
+    return;
+  }
+  // Corrects the most recent entry in place (keeps the original baseline intact)
+  // rather than logging a brand new PR — use "Zapsat PR" for that.
+  const history = state.manualPRs[prEditingExercise] || [];
+  const entry = {weight: w, reps: r, date: fmtDate(new Date())};
+  if(history.length === 0) history.push(entry);
+  else history[history.length - 1] = entry;
+  state.manualPRs[prEditingExercise] = history;
+  recomputeExerciseStats();
+  saveState();
+  closePRModal();
+  renderAll();
+});
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-editpr]');
+  if(btn) openPRModal(btn.dataset.editpr);
+});
+
+// ---------- Onboarding / profile ----------
+let pendingAvatar = state.profile.avatar || null;
+
+function openProfileModal(){
+  const isFirstTime = !state.profile.age || !state.profile.name || !state.profile.avatar;
+  document.getElementById('modalTitle').textContent = isFirstTime ? '📝 Registrace' : 'Upravit profil';
+  document.getElementById('modalDesc').textContent = isFirstTime
+    ? 'Než začneš, vyplň si profil — jméno, věk a profilovku. Věk používáme k tomu, aby odhady tvého maxima (1RM) seděly na tvůj věk a nevypadaly nesmyslně vysoko — ranky pak stejně počítáme jen podle tvého vlastního zlepšení, ne podle cizích tabulek.'
+    : 'Uprav si jméno, věk nebo profilovku.';
+  document.getElementById('ageInput').value = state.profile.age || '';
+  document.getElementById('nameInput').value = state.profile.name || '';
+  document.getElementById('avatarInput').value = '';
+  pendingAvatar = state.profile.avatar || null;
+  updateAvatarPreview();
+  document.getElementById('guestUpgradeBox').style.display = (isGuest && !currentUser) ? 'block' : 'none';
+  document.getElementById('onboardingModal').style.display = 'flex';
+}
+function closeProfileModal(){
+  document.getElementById('onboardingModal').style.display = 'none';
+}
+function updateAvatarPreview(){
+  const img = document.getElementById('avatarPreview');
+  const placeholder = document.getElementById('avatarPlaceholder');
+  if(pendingAvatar){
+    img.src = pendingAvatar;
+    img.style.display = 'block';
+    placeholder.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+}
+function resizeAvatar(file, callback){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 128;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(size / img.width, size / img.height);
+      const dw = img.width * scale, dh = img.height * scale;
+      ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
+      callback(canvas.toDataURL('image/jpeg', 0.75));
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+document.getElementById('avatarInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 8 * 1024 * 1024){
+    showToast('Obrázek je moc velký, zkus prosím menší (max 8 MB).', 'warn');
+    return;
+  }
+  resizeAvatar(file, (dataUrl) => {
+    pendingAvatar = dataUrl;
+    updateAvatarPreview();
+  });
+});
+document.getElementById('saveAgeBtn').addEventListener('click', () => {
+  const val = parseInt(document.getElementById('ageInput').value, 10);
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name){
+    showToast('Zadej prosím jméno nebo přezdívku.', 'warn');
+    return;
+  }
+  if(!val || val < 8 || val > 100){
+    showToast('Zadej platný věk (8–100).', 'warn');
+    return;
+  }
+  if(!pendingAvatar){
+    showToast('Nahraj prosím profilovku.', 'warn');
+    return;
+  }
+  state.profile.age = val;
+  state.profile.name = name;
+  state.profile.avatar = pendingAvatar;
+  recomputeExerciseStats();
+  saveState();
+  closeProfileModal();
+  renderAll();
+});
+document.getElementById('editProfileBtn').addEventListener('click', openProfileModal);
+document.getElementById('editProfileBtn2').addEventListener('click', openProfileModal);
+document.getElementById('guestUpgradeBtn').addEventListener('click', () => {
+  closeProfileModal();
+  setAuthMode('register');
+  document.getElementById('authModal').style.display = 'flex';
+});
+
+// ---------- Auth (login / register) ----------
+function setAuthMode(mode){
+  authMode = mode;
+  document.getElementById('authTitle').textContent = mode === 'login' ? '🔑 Přihlášení' : '📝 Registrace účtu';
+  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Přihlásit se' : 'Zaregistrovat se';
+  document.getElementById('authToggleMode').textContent = mode === 'login' ? 'Nemáš účet? Zaregistruj se' : 'Už máš účet? Přihlas se';
+  document.getElementById('authError').style.display = 'none';
+}
+document.getElementById('authToggleMode').addEventListener('click', () => {
+  setAuthMode(authMode === 'login' ? 'register' : 'login');
+});
+document.getElementById('authGuestBtn').addEventListener('click', () => {
+  isGuest = true;
+  localStorage.setItem('ironrank_guest', '1');
+  document.getElementById('authModal').style.display = 'none';
+  if(!state.profile.age || !state.profile.name || !state.profile.avatar){
+    openProfileModal();
+  }
+  renderAll();
+  maybeSendStreakReminder(false);
+});
+function showAuthError(msg){
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+document.getElementById('authSubmitBtn').addEventListener('click', () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password || password.length < 6){
+    showAuthError('Zadej e-mail a heslo (aspoň 6 znaků).');
+    return;
+  }
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true;
+  const done = () => { btn.disabled = false; };
+  if(authMode === 'login'){
+    auth.signInWithEmailAndPassword(email, password).catch(err => {
+      showAuthError(authErrorText(err));
+    }).finally(done);
+  } else {
+    auth.createUserWithEmailAndPassword(email, password).then(cred => {
+      return db.collection('userIndex').doc(email.toLowerCase()).set({uid: cred.user.uid});
+    }).catch(err => {
+      showAuthError(authErrorText(err));
+    }).finally(done);
+  }
+});
+function authErrorText(err){
+  const map = {
+    'auth/email-already-in-use': 'Tenhle e-mail už má účet — zkus se přihlásit.',
+    'auth/invalid-email': 'Neplatný e-mail.',
+    'auth/weak-password': 'Heslo je moc slabé (aspoň 6 znaků).',
+    'auth/wrong-password': 'Špatné heslo.',
+    'auth/user-not-found': 'Účet s tímhle e-mailem neexistuje — zkus se zaregistrovat.',
+    'auth/invalid-credential': 'Špatný e-mail nebo heslo.',
+  };
+  return map[err.code] || ('Něco se nepovedlo: ' + err.message);
+}
+
+// ---------- Friends ----------
+let friendProfiles = {};
+document.getElementById('addFriendBtn').addEventListener('click', () => {
+  const email = document.getElementById('friendEmailInput').value.trim().toLowerCase();
+  const msgEl = document.getElementById('friendAddMsg');
+  msgEl.style.color = 'var(--muted)';
+  if(!email){ msgEl.textContent = 'Zadej e-mail kamaráda.'; return; }
+  if(email === (currentUser && currentUser.email || '').toLowerCase()){
+    msgEl.textContent = 'To jsi ty :) Zadej e-mail kamaráda.';
+    return;
+  }
+  msgEl.textContent = 'Hledám…';
+  db.collection('userIndex').doc(email).get().then(doc => {
+    if(!doc.exists){
+      msgEl.style.color = 'var(--bad)';
+      msgEl.textContent = 'Nikoho s tímhle e-mailem jsme nenašli — musí si nejdřív vytvořit účet v appce.';
+      return;
+    }
+    const friendUid = doc.data().uid;
+    return db.collection('users').doc(currentUser.uid).collection('friends').doc(friendUid).set({email, addedAt: Date.now()}).then(() => {
+      msgEl.style.color = 'var(--good)';
+      msgEl.textContent = 'Přítel přidán!';
+      document.getElementById('friendEmailInput').value = '';
+    });
+  }).catch(e => {
+    msgEl.style.color = 'var(--bad)';
+    msgEl.textContent = 'Něco se nepovedlo: ' + e.message;
+  });
+});
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-removefriend]');
+  if(btn && currentUser){
+    db.collection('users').doc(currentUser.uid).collection('friends').doc(btn.dataset.removefriend).delete();
+  }
+});
+function initFriendsListeners(){
+  db.collection('users').doc(currentUser.uid).collection('friends').onSnapshot(snap => {
+    const friendIds = snap.docs.map(d => d.id);
+    Object.keys(friendUnsubscribers).forEach(uid => {
+      if(!friendIds.includes(uid)){
+        friendUnsubscribers[uid]();
+        delete friendUnsubscribers[uid];
+        delete friendProfiles[uid];
+      }
+    });
+    friendIds.forEach(uid => {
+      if(friendUnsubscribers[uid]) return;
+      friendUnsubscribers[uid] = db.collection('users').doc(uid).onSnapshot(docSnap => {
+        friendProfiles[uid] = docSnap.exists ? docSnap.data() : null;
+        renderFriends();
+      });
+    });
+    if(friendIds.length === 0) renderFriends();
+  });
+}
+function friendRankIndex(ex, muscleKey){
+  if(!ex || ex.best == null) return -1;
+  const reference = MUSCLE_REFERENCE_1RM[muscleKey] || DEFAULT_REFERENCE_1RM;
+  const ratio = ex.best / reference;
+  let idx = 0;
+  for(let i=0;i<RANK_TIERS.length;i++){ if(ratio >= RANK_TIERS[i].mult) idx = i; }
+  return idx;
+}
+function friendMuscleTier(data, muscleKey){
+  const exMuscles = data.exerciseMuscles || {};
+  let best = -1;
+  Object.entries(data.exercises || {}).forEach(([name, ex]) => {
+    if(!ex || !ex.baseline) return;
+    if(exMuscles[name] !== muscleKey) return;
+    const idx = friendRankIndex(ex, muscleKey);
+    if(idx > best) best = idx;
+  });
+  return best >= 0 ? RANK_TIERS[best] : null;
+}
+function fStyle(data, muscleKey){
+  const tier = friendMuscleTier(data, muscleKey);
+  if(!tier) return '';
+  return ` style="fill:var(--${tier.cls});filter:drop-shadow(0 0 3px var(--${tier.cls})) drop-shadow(0 0 8px var(--${tier.cls}))"`;
+}
+function friendBodyFrontSvg(data){
+  return `<svg viewBox="0 0 240 520" class="bodyfig bodyfig-mini">
+    <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
+    <path class="bodyhair" d="M95,32 C95,16 106,7 120,7 C134,7 145,16 145,32 C145,25 138,20 120,20 C102,20 95,25 95,32 Z"/>
+    <ellipse class="bodyface" cx="111" cy="45" rx="3" ry="3.6"/>
+    <ellipse class="bodyface" cx="129" cy="45" rx="3" ry="3.6"/>
+    <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
+    <path class="clavicle" d="M120,92 Q100,82 82,96"/>
+    <path class="clavicle" d="M120,92 Q140,82 158,96"/>
+    <path class="musclepart"${fStyle(data,'shoulders')} d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+    <path class="musclepart"${fStyle(data,'shoulders')} d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+    <path class="musclepart"${fStyle(data,'chest')} d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/>
+    <path class="musclepart"${fStyle(data,'chest')} d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/>
+    <path class="bodypart-neutral" d="M92,158 Q98,186 96,214 L88,212 Q85,184 84,160 Z"/>
+    <path class="bodypart-neutral" d="M148,158 Q142,186 144,214 L152,212 Q155,184 156,160 Z"/>
+    <rect class="musclepart"${fStyle(data,'abs')} x="98" y="158" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs')} x="123" y="158" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs')} x="98" y="181" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs')} x="123" y="181" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs')} x="98" y="204" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs')} x="123" y="204" width="19" height="18" rx="6"/>
+    <path class="bodypart-neutral" d="M90,230 Q120,240 150,230 L152,248 Q120,258 88,248 Z"/>
+    <path class="musclepart"${fStyle(data,'biceps')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
+    <path class="musclepart"${fStyle(data,'biceps')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+    <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
+    <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
+    <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
+    <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
+    <path class="musclepart"${fStyle(data,'quads')} d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/>
+    <path class="musclepart"${fStyle(data,'quads')} d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/>
+    <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
+    <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
+    <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
+    <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
+  </svg>`;
+}
+function friendBodyBackSvg(data){
+  return `<svg viewBox="0 0 240 520" class="bodyfig bodyfig-mini">
+    <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
+    <path class="bodyhair" d="M95,32 C95,15 106,6 120,6 C134,6 145,15 145,32 C145,44 140,54 132,60 C138,50 138,30 120,30 C102,30 102,50 108,60 C100,54 95,44 95,32 Z"/>
+    <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
+    <path class="musclepart"${fStyle(data,'back')} d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
+    <path class="musclepart"${fStyle(data,'shoulders')} d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+    <path class="musclepart"${fStyle(data,'shoulders')} d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+    <path class="musclepart"${fStyle(data,'back')} d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
+    <path class="musclepart"${fStyle(data,'back')} d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
+    <rect class="musclepart"${fStyle(data,'back')} x="104" y="166" width="32" height="34" rx="12"/>
+    <path class="musclepart"${fStyle(data,'triceps')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
+    <path class="musclepart"${fStyle(data,'triceps')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+    <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
+    <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
+    <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
+    <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
+    <path class="musclepart"${fStyle(data,'glutes')} d="M120,206 C99,206 87,219 87,236 C87,252 101,264 120,264 C139,264 153,252 153,236 C153,219 141,206 120,206 Z"/>
+    <path class="musclepart"${fStyle(data,'hamstrings')} d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/>
+    <path class="musclepart"${fStyle(data,'hamstrings')} d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/>
+    <path class="musclepart"${fStyle(data,'calves')} d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/>
+    <path class="musclepart"${fStyle(data,'calves')} d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/>
+    <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
+    <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
+  </svg>`;
+}
+function renderFriends(){
+  const container = document.getElementById('friendsList');
+  const uids = Object.keys(friendProfiles);
+  if(uids.length === 0){
+    container.innerHTML = '<div class="empty">Zatím nemáš žádné přátele. Přidej někoho podle e-mailu výše.</div>';
+    return;
+  }
+  container.innerHTML = uids.map(uid => {
+    const data = friendProfiles[uid];
+    if(!data) return `<div class="friend-card"><div class="tiny">Načítání…</div></div>`;
+    const prof = data.profile || {};
+    const level = levelFromXP(data.xp || 0).level;
+    const rank = getAccountRank(level);
+    const exMuscles = data.exerciseMuscles || {};
+    const entries = Object.entries(data.exercises || {}).filter(([,e]) => e && e.baseline);
+    entries.sort((a,b) => friendRankIndex(b[1], exMuscles[b[0]]) - friendRankIndex(a[1], exMuscles[a[0]]));
+    const top = entries.slice(0,3);
+    return `<div class="friend-card">
+      ${prof.avatar ? `<img src="${prof.avatar}" alt="">` : `<div style="width:52px;height:52px;border-radius:50%;background:var(--card2)"></div>`}
+      <div style="flex:1; min-width:180px">
+        <div class="fname">${escapeHtml(prof.name || 'Bez jména')}</div>
+        <div class="fmeta">${prof.age ? prof.age + ' let' : ''}</div>
+        <div class="frank" style="color:${rank.color}">${rank.icon} ${rank.name} · Level ${level}</div>
+        <div class="fprs">
+          ${top.length ? top.map(([name, ex]) => {
+            const idx = friendRankIndex(ex, exMuscles[name]);
+            const tier = idx >= 0 ? RANK_TIERS[idx] : null;
+            const pr = ex.bestSet;
+            return `<span class="fpr-tag">${tier ? tier.icon : ''} ${escapeHtml(name)}${pr ? `: ${pr.weight}kg×${pr.reps}` : ''}</span>`;
+          }).join('') : '<span class="tiny">Zatím žádné PR</span>'}
+        </div>
+      </div>
+      <div class="fbody">${friendBodyFrontSvg(data)}${friendBodyBackSvg(data)}</div>
+      <button class="friend-remove" data-removefriend="${uid}">Odebrat</button>
+    </div>`;
+  }).join('');
+}
+
+// init
+recomputeExerciseStats();
+auth.onAuthStateChanged(user => {
+  if(!user){
+    currentUser = null;
+    Object.values(friendUnsubscribers).forEach(fn => fn());
+    friendUnsubscribers = {};
+    friendProfiles = {};
+    if(isGuest){
+      document.getElementById('authModal').style.display = 'none';
+      if(!state.profile.age || !state.profile.name || !state.profile.avatar){
+        openProfileModal();
+      }
+      renderAll();
+      maybeSendStreakReminder(false);
+    } else {
+      document.getElementById('authModal').style.display = 'flex';
+    }
+    return;
+  }
+  currentUser = user;
+  const wasGuest = isGuest;
+  isGuest = false;
+  localStorage.removeItem('ironrank_guest');
+  document.getElementById('authModal').style.display = 'none';
+  db.collection('users').doc(user.uid).get().then(doc => {
+    if(doc.exists){
+      const cloud = doc.data();
+      state = Object.assign(loadState(), cloud);
+      if(!state.profile) state.profile = {age:null, name:'', avatar:null};
+      state.exerciseMuscles = {...DEFAULT_EXERCISE_MUSCLE, ...(state.exerciseMuscles || {})};
+      if(!state.manualPRs) state.manualPRs = {};
+      if(!Array.isArray(state.presets)) state.presets = [];
+      recomputeExerciseStats();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } else if(wasGuest){
+      // fresh account created from guest mode — push existing local progress up to the cloud
+      db.collection('users').doc(user.uid).set(state).catch(e => console.error('cloud sync failed', e));
+    }
+    if(!state.profile.age || !state.profile.name || !state.profile.avatar){
+      openProfileModal();
+    }
+    renderAll();
+    initFriendsListeners();
+    maybeSendStreakReminder(false);
+    if(notifyEnabled() && ('Notification' in window) && Notification.permission === 'granted'){
+      registerPushToken();
+    }
+  });
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

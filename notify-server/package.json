@@ -1,0 +1,13 @@
+{
+  "name": "ironrank-streak-reminders",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Denní cron job (spouštěný přes GitHub Actions), který posílá push oznámení o denní řadě přes Firebase Cloud Messaging.",
+  "main": "send-reminders.js",
+  "scripts": {
+    "start": "node send-reminders.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
