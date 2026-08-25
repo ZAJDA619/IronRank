@@ -19,7 +19,8 @@
   :root{
     --bg:#0f1115; --bg2:#171a21; --card:#1c2029; --card2:#222633;
     --text:#eef0f4; --muted:#8b93a3; --accent:#4fc3f7; --accent2:#0ea5e9;
-    --bronze:#9a5a2e; --silver:#8f9aa8; --gold:#ffd23f; --platinum:#7fd8e8; --diamond:#8a7ffb; --legend:#ff5da2;
+    --bronze:#9a5a2e; --silver:#8f9aa8; --gold:#ffd23f; --platinum:#7fd8e8; --diamond:#8a7ffb;
+    --master:#34d399; --grandmaster:#fb923c; --legend:#ff5da2; --mythic:#e879f9;
     --good:#4fd68a; --bad:#ff6b6b; --border:#2a2f3b;
     --radius:14px;
   }
@@ -136,7 +137,10 @@
   .pill.gold{background:rgba(242,177,52,.2); color:var(--gold);}
   .pill.platinum{background:rgba(127,216,232,.2); color:var(--platinum);}
   .pill.diamond{background:rgba(138,127,251,.2); color:var(--diamond);}
+  .pill.master{background:rgba(52,211,153,.2); color:var(--master);}
+  .pill.grandmaster{background:rgba(251,146,60,.2); color:var(--grandmaster);}
   .pill.legend{background:rgba(255,93,162,.2); color:var(--legend);}
+  .pill.mythic{background:rgba(232,121,249,.2); color:var(--mythic);}
   .pill.unranked{background:rgba(139,147,163,.2); color:var(--muted);}
 
   .exlist{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;}
@@ -156,9 +160,17 @@
 
   .history-item{border-bottom:1px solid var(--border); padding:12px 0;}
   .history-item:last-child{border-bottom:none;}
-  .history-item .hdate{font-weight:700; font-size:15.5px; display:flex; justify-content:space-between; align-items:center;}
+  .history-item .hrow{display:flex; align-items:center; gap:10px; cursor:pointer;}
+  .history-item .hthumb{width:64px; height:64px; border-radius:12px; object-fit:cover; flex-shrink:0; border:1px solid var(--border);}
+  .history-item .hthumb-empty{display:flex; align-items:center; justify-content:center; background:var(--card2); font-size:26px;}
+  .history-item .hinfo{flex:1; min-width:0;}
+  .history-item .hname{font-weight:700; font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .history-item .hchevron{color:var(--muted); font-size:13px; flex-shrink:0; transition:transform .2s ease;}
+  .history-item.expanded .hchevron{transform:rotate(180deg);}
+  .history-item .hdetails{display:none; margin-top:10px; text-align:center;}
+  .history-item .hphoto-full{display:block; max-width:220px; width:100%; border-radius:12px; margin:0 auto 8px; cursor:pointer;}
   .history-item .hex{font-size:14.5px; color:var(--muted); margin-top:4px;}
-  .xp-tag{color:var(--accent); font-weight:700; font-size:14px;}
+  .xp-tag{color:var(--accent); font-weight:700; font-size:14px; display:block; margin-bottom:6px;}
 
   .ach-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px;}
   .ach{
@@ -178,6 +190,36 @@
   @keyframes slidein{from{transform:translateY(20px); opacity:0;} to{transform:translateY(0); opacity:1;}}
   .toast b{color:var(--accent);}
   .toast.warn{border-color:var(--bad);}
+
+  .achievement-popup{
+    position:fixed; bottom:20px; right:20px; z-index:1100; pointer-events:none;
+    display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--accent);
+    border-radius:16px; padding:14px 20px; max-width:320px;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);
+    opacity:0; transform:translateY(16px) scale(.92);
+    transition:opacity .35s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .achievement-popup.show{
+    opacity:1; transform:translateY(0) scale(1);
+    animation:achievementGlow 1.2s ease-in-out .05s;
+  }
+  @keyframes achievementGlow{
+    0%{box-shadow:0 12px 40px rgba(0,0,0,.5), 0 0 0 rgba(79,195,247,.6);}
+    40%{box-shadow:0 12px 40px rgba(0,0,0,.5), 0 0 45px rgba(79,195,247,.7);}
+    100%{box-shadow:0 12px 40px rgba(0,0,0,.5), 0 0 22px rgba(79,195,247,.25);}
+  }
+  .achievement-popup-icon{
+    font-size:32px; width:50px; height:50px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--card2); border:2px solid var(--accent);
+  }
+  .achievement-popup.show .achievement-popup-icon{animation:achievementIconPop .5s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes achievementIconPop{
+    0%{transform:scale(0) rotate(-25deg);}
+    60%{transform:scale(1.3) rotate(10deg);}
+    100%{transform:scale(1) rotate(0);}
+  }
+  .achievement-popup-name{font-weight:800; font-size:16px; margin-top:2px;}
   .empty{color:var(--muted); font-size:15px; text-align:center; padding:24px 0;}
   .flexend{display:flex; justify-content:flex-end; gap:8px; margin-top:14px;}
   select#exSelect{margin-top:0;}
@@ -198,11 +240,25 @@
   .profile-link{background:none; border:none; color:var(--muted); font-size:13.5px; cursor:pointer; padding:0; text-decoration:underline; margin-top:2px;}
   .profile-link:hover{color:var(--text);}
 
-  .profile-header-row{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
-  .profile-header-left{display:flex; align-items:center; gap:14px;}
-  .pname{font-size:20px; font-weight:800;}
-  .bodyfig-mini{width:74px !important; height:auto; flex-shrink:0;}
-  .profile-header-figure{display:flex; align-items:flex-end; gap:6px;}
+  .avatar-clickable{cursor:pointer; transition:transform .15s ease;}
+  .avatar-clickable:hover{transform:scale(1.05);}
+  .avatar-placeholder{display:flex; align-items:center; justify-content:center; background:#12141a; color:var(--muted); flex-shrink:0;}
+  #avatarLightbox{cursor:zoom-out;}
+  #avatarLightboxImg{cursor:default;}
+  #cropStage{position:relative; width:260px; height:260px; margin:0 auto; border-radius:50%; overflow:hidden; background:#0d0f14; border:1px solid var(--border); touch-action:none; cursor:grab; max-width:100%;}
+  #cropStage.dragging{cursor:grabbing;}
+  #cropStage img{position:absolute; left:0; top:0; max-width:none; user-select:none; -webkit-user-drag:none; pointer-events:none;}
+  #cropStage::after{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.5); pointer-events:none;
+  }
+
+  .profile-header-row{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:nowrap;}
+  .profile-header-left{display:flex; align-items:center; gap:10px; min-width:0; flex-shrink:1;}
+  .profile-header-left .pname{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .pname{font-size:18px; font-weight:800;}
+  .bodyfig-mini{width:46px !important; height:auto; flex-shrink:0;}
+  .profile-header-figure{display:flex; align-items:flex-end; gap:4px; flex-shrink:0;}
 
   .bodyfigs{display:flex; justify-content:center; gap:28px; flex-wrap:wrap; padding:10px 0;}
   .bodyfig-col{width:220px; max-width:44vw;}
@@ -231,17 +287,29 @@
 
   .friend-card{
     background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-    padding:16px 18px; margin-bottom:14px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:14px 16px; margin-bottom:14px;
   }
-  .friend-card img{width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); flex-shrink:0;}
-  .friend-card .fname{font-size:17px; font-weight:800;}
-  .friend-card .fmeta{color:var(--muted); font-size:14px;}
-  .friend-card .frank{font-size:14px; font-weight:700; margin-top:2px;}
-  .friend-card .fprs{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+  .friend-card .frow{display:flex; align-items:center; gap:12px; cursor:pointer;}
+  .friend-card img.favatar{width:48px; height:48px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); flex-shrink:0;}
+  .friend-card .finfo{flex:1; min-width:0;}
+  .friend-card .fname{font-size:16px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .friend-card .fmeta{color:var(--muted); font-size:13.5px;}
+  .friend-card .fchevron{color:var(--muted); font-size:13px; flex-shrink:0; transition:transform .2s ease;}
+  .friend-card.expanded .fchevron{transform:rotate(180deg);}
+  .friend-card .fdetails{display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);}
+  .friend-card .frank{font-size:14px; font-weight:700; margin-bottom:8px;}
+  .friend-card .fprs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
   .friend-card .fpr-tag{background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:13px;}
-  .friend-card .fbody{display:flex; gap:4px; margin-left:auto;}
+  .friend-card .fbody{display:flex; gap:4px; justify-content:center; margin-bottom:10px;}
   .friend-remove{background:none; border:1px solid var(--border); color:var(--muted); border-radius:7px; padding:4px 10px; font-size:13.5px; cursor:pointer;}
   .friend-remove:hover{color:var(--bad); border-color:var(--bad);}
+  .gallery-grid{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+  .gallery-thumb{position:relative; width:76px; height:76px;}
+  .gallery-thumb img{width:76px; height:76px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer;}
+  .gallery-thumb button{
+    position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
+    background:var(--bad); border:none; color:#fff; font-size:12px; line-height:1; cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -255,8 +323,10 @@
     <label>Heslo</label>
     <input type="password" id="authPassword" placeholder="alespoň 6 znaků" autocomplete="current-password">
     <div class="tiny" id="authError" style="color:var(--bad); margin-top:8px; display:none"></div>
-    <div class="flexend" style="justify-content:space-between; align-items:center">
+    <div style="margin-top:14px">
       <button class="profile-link" id="authToggleMode">Nemáš účet? Zaregistruj se</button>
+    </div>
+    <div class="flexend" style="margin-top:10px">
       <button class="btn" id="authSubmitBtn">Přihlásit se</button>
     </div>
     <div style="text-align:center; margin-top:16px; padding-top:14px; border-top:1px solid var(--border)">
@@ -271,8 +341,8 @@
     <p class="desc" id="modalDesc">Ještě než začneš, řekni nám o sobě pár věcí. Věk používáme k tomu, aby odhady tvého maxima (1RM) seděly na tvůj věk a nevypadaly nesmyslně vysoko — ranky pak stejně počítáme jen podle tvého vlastního zlepšení, ne podle cizích tabulek.</p>
 
     <div style="display:flex; align-items:center; gap:14px; margin-top:8px">
-      <img id="avatarPreview" src="" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:#12141a;border:1px solid var(--border); display:none">
-      <div id="avatarPlaceholder" style="width:64px;height:64px;border-radius:50%;background:#12141a;border:1px solid var(--border); display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:22px;">👤</div>
+      <img id="avatarPreview" src="" alt="" style="width:64px;height:64px;min-width:64px;min-height:64px;border-radius:50%;object-fit:cover;background:#12141a;border:1px solid var(--border); display:none; flex-shrink:0">
+      <div id="avatarPlaceholder" class="avatar-placeholder" style="width:64px;height:64px;min-width:64px;min-height:64px;border-radius:50%;border:1px solid var(--border);font-size:22px;flex-shrink:0">👤</div>
       <div>
         <label style="margin-top:0">Profilovka</label>
         <input type="file" id="avatarInput" accept="image/*">
@@ -294,6 +364,31 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="cropModal" style="display:none">
+  <div class="modal-box" style="max-width:340px; text-align:center">
+    <h2>✂️ Uprav profilovku</h2>
+    <p class="desc">Přetáhni obrázek a posuvníkem uprav přiblížení.</p>
+    <div id="cropStage"><img id="cropImage" src="" alt=""></div>
+    <input type="range" id="cropZoom" min="100" max="300" value="100" style="width:100%; margin-top:16px">
+    <div class="flexend">
+      <button class="btn secondary" id="cropCancelBtn">Zrušit</button>
+      <button class="btn" id="cropConfirmBtn">Použít</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="avatarLightbox" style="display:none">
+  <img id="avatarLightboxImg" src="" alt="" style="max-width:88vw; max-height:88vh; border-radius:20px; object-fit:contain; box-shadow:0 20px 60px rgba(0,0,0,.5);">
+</div>
+
+<div class="achievement-popup" id="achievementPopup" style="display:none">
+  <div class="achievement-popup-icon" id="achievementPopupIcon"></div>
+  <div>
+    <div class="tiny" style="color:var(--accent); font-weight:800; letter-spacing:.5px">ODZNAK ODEMČEN</div>
+    <div class="achievement-popup-name" id="achievementPopupName"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="presetModal" style="display:none">
   <div class="modal-box" style="max-width:480px">
     <h2>📋 Presety tréninků</h2>
@@ -304,6 +399,19 @@
     <div id="presetManageList"></div>
     <div class="flexend">
       <button class="btn" id="closePresetModalBtn">Zavřít</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="galleryModal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <h2>🖼️ Moje galerie</h2>
+    <p class="desc">Fotky, které uvidí tvoji přátelé v tvém profilu.</p>
+    <div id="galleryGrid" class="gallery-grid"></div>
+    <label>Přidat fotku</label>
+    <input type="file" id="galleryPhotoInput" accept="image/*">
+    <div class="flexend">
+      <button class="btn" id="closeGalleryModalBtn">Zavřít</button>
     </div>
   </div>
 </div>
@@ -383,8 +491,9 @@
     <div class="card profile-header-card">
       <div class="profile-header-row">
         <div class="profile-header-left">
-          <img id="dashAvatar" src="" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--accent); display:none">
-          <div>
+          <img id="dashAvatar" class="avatar-clickable" src="" alt="" onclick="openAvatarLightbox(this.src)" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--accent); display:none; flex-shrink:0">
+          <div id="dashAvatarPlaceholder" class="avatar-placeholder" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--accent); font-size:20px; flex-shrink:0">👤</div>
+          <div style="min-width:0">
             <div class="pname" id="dashName">—</div>
             <div class="tiny" id="dashAge"></div>
             <button class="profile-link" id="editProfileBtn2">upravit profil</button>
@@ -458,12 +567,12 @@
             <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
             <path class="bodyhair" d="M95,32 C95,15 106,6 120,6 C134,6 145,15 145,32 C145,44 140,54 132,60 C138,50 138,30 120,30 C102,30 102,50 108,60 C100,54 95,44 95,32 Z"/>
             <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
-            <path class="musclepart" data-muscle="back" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
+            <path class="musclepart" data-muscle="back" data-subpart="traps" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
             <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
             <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
-            <path class="musclepart" data-muscle="back" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
-            <path class="musclepart" data-muscle="back" d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
-            <rect class="musclepart" data-muscle="back" x="104" y="166" width="32" height="34" rx="12"/>
+            <path class="musclepart" data-muscle="back" data-subpart="lats" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
+            <path class="musclepart" data-muscle="back" data-subpart="lats" d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
+            <rect class="musclepart" data-muscle="back" data-subpart="lower" x="104" y="166" width="32" height="34" rx="12"/>
             <path class="musclepart" data-muscle="triceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
             <path class="musclepart" data-muscle="triceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
             <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
@@ -503,11 +612,6 @@
       <h2>🏆 Nejlepší ranky</h2>
       <div id="topRanks" class="exlist"><div class="empty">Zatím nemáš zaznamenané žádné cviky.</div></div>
     </div>
-
-    <div class="card">
-      <h2>📅 Poslední trénink</h2>
-      <div id="lastWorkout"><div class="empty">Ještě jsi nic nezapsal. Mrkni na záložku „Zapsat trénink“.</div></div>
-    </div>
   </section>
 
   <!-- LOG WORKOUT -->
@@ -530,6 +634,17 @@
         </div>
       </div>
 
+      <div style="margin-top:12px">
+        <label>Fotka</label>
+        <div id="workoutPhotoPickerRow">
+          <input type="file" id="workoutPhotoInput" accept="image/*">
+        </div>
+        <div id="workoutPhotoPreviewWrap" style="display:none; margin-top:10px; position:relative; width:110px">
+          <img id="workoutPhotoPreview" src="" alt="" style="width:110px; height:110px; object-fit:cover; border-radius:12px; border:1px solid var(--border)">
+          <button type="button" id="removeWorkoutPhotoBtn" class="btn danger small" style="position:absolute; top:-8px; right:-8px; padding:2px 8px; line-height:1">✕</button>
+        </div>
+      </div>
+
       <div style="margin-top:16px">
         <div class="row3">
           <div>
@@ -538,7 +653,7 @@
           </div>
           <div>
             <label>Jiný cvik</label>
-            <input type="text" id="newExName" placeholder="např. Bulharský dřep">
+            <input type="text" id="newExName" placeholder="e.g. Bulgarian Split Squat">
           </div>
           <button class="btn secondary small" id="addExerciseBtn">+ Přidat</button>
         </div>
@@ -654,16 +769,16 @@
             <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
 
             <!-- traps -->
-            <path class="musclepart" data-muscle="back" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
+            <path class="musclepart" data-muscle="back" data-subpart="traps" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
 
             <!-- rear shoulders (rear delts) -->
             <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
             <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
 
             <!-- lats + lower back -->
-            <path class="musclepart" data-muscle="back" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
-            <path class="musclepart" data-muscle="back" d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
-            <rect class="musclepart" data-muscle="back" x="104" y="166" width="32" height="34" rx="12"/>
+            <path class="musclepart" data-muscle="back" data-subpart="lats" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
+            <path class="musclepart" data-muscle="back" data-subpart="lats" d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
+            <rect class="musclepart" data-muscle="back" data-subpart="lower" x="104" y="166" width="32" height="34" rx="12"/>
 
             <!-- triceps -->
             <path class="musclepart" data-muscle="triceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
@@ -707,7 +822,7 @@
         </div>
         <div>
           <label>Jiný cvik</label>
-          <input type="text" id="prLogNewName" placeholder="např. Bulharský dřep">
+          <input type="text" id="prLogNewName" placeholder="e.g. Bulgarian Split Squat">
         </div>
       </div>
       <div id="prLogMuscleWrap" style="display:none">
@@ -742,13 +857,14 @@
   <section id="tab-friends" style="display:none">
     <div class="card">
       <h2>👥 Přátelé</h2>
-      <div class="row2">
-        <div style="flex:1">
+      <div style="display:flex; gap:16px; align-items:flex-end">
+        <div style="flex:1; min-width:0">
           <label>E-mail kamaráda</label>
           <input type="email" id="friendEmailInput" placeholder="kamarad@email.cz">
         </div>
-        <div style="display:flex; align-items:flex-end">
-          <button class="btn" id="addFriendBtn" style="margin-top:12px">Přidat přítele</button>
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <button class="btn secondary small" id="openGalleryBtn">🖼️ Moje galerie</button>
+          <button class="btn small" id="addFriendBtn" style="height:38px; display:flex; align-items:center; justify-content:center; padding:0 14px">Přidat přítele</button>
         </div>
       </div>
       <div class="tiny" id="friendAddMsg" style="margin-top:8px"></div>
@@ -803,11 +919,14 @@ let friendUnsubscribers = {};
 const STORAGE_KEY = 'ironrank_data_v1';
 const RANK_TIERS = [
   {name:'Bronze', mult:0.00, cls:'bronze', icon:'🥉'},
-  {name:'Silver', mult:0.50, cls:'silver', icon:'🥈'},
-  {name:'Gold', mult:0.75, cls:'gold', icon:'🥇'},
-  {name:'Platinum', mult:1.00, cls:'platinum', icon:'💎'},
-  {name:'Diamond', mult:1.30, cls:'diamond', icon:'💠'},
-  {name:'Legend', mult:1.60, cls:'legend', icon:'👑'},
+  {name:'Silver', mult:0.35, cls:'silver', icon:'🥈'},
+  {name:'Gold', mult:0.55, cls:'gold', icon:'🥇'},
+  {name:'Platinum', mult:0.75, cls:'platinum', icon:'💎'},
+  {name:'Diamond', mult:0.95, cls:'diamond', icon:'💠'},
+  {name:'Master', mult:1.15, cls:'master', icon:'🔷'},
+  {name:'Grandmaster', mult:1.40, cls:'grandmaster', icon:'🔶'},
+  {name:'Legend', mult:1.70, cls:'legend', icon:'👑'},
+  {name:'Mythic', mult:2.10, cls:'mythic', icon:'🌟'},
 ];
 // Rough "trained adult" reference 1RM (kg) per muscle group, used as the yardstick
 // for ranks. A rank compares your age-adjusted best e1RM against this, not just
@@ -851,83 +970,103 @@ const MUSCLE_GROUPS = [
 ];
 const DEFAULT_EXERCISE_MUSCLE = {
   // Prsa
-  'Bench press':'chest',
-  'Šikmý bench press':'chest',
-  'Bench press s jednoručkami':'chest',
-  'Šikmý bench press s jednoručkami':'chest',
-  'Kliky':'chest',
-  'Kliky na bradlech (dipy)':'chest',
-  'Rozpažky s činkami':'chest',
-  'Křížení na kladce (cable crossover)':'chest',
-  'Motýlek (peck deck)':'chest',
-  'Tlak na chest pressu':'chest',
+  'Bench Press':'chest',
+  'Incline Bench Press':'chest',
+  'Dumbbell Bench Press':'chest',
+  'Incline Dumbbell Bench Press':'chest',
+  'Push-ups':'chest',
+  'Dips':'chest',
+  'Dumbbell Flyes':'chest',
+  'Cable Crossover':'chest',
+  'Pec Deck Fly':'chest',
+  'Chest Press Machine':'chest',
   // Záda
-  'Mrtvý tah (Deadlift)':'back',
-  'Sumo mrtvý tah':'back',
-  'Přítah v předklonu':'back',
-  'Shyby':'back',
-  'Přítah podhmatem':'back',
-  'Veslování jednoručkou':'back',
-  'Veslování na kladce (seated row)':'back',
-  'Stahování kladky (lat pulldown)':'back',
-  'T-bar veslování':'back',
-  'Hyperextenze':'back',
-  'Shrugy (na trapézy)':'back',
+  'Deadlift':'back',
+  'Sumo Deadlift':'back',
+  'Bent-Over Row':'back',
+  'Pull-ups':'back',
+  'Chin-ups':'back',
+  'One-Arm Dumbbell Row':'back',
+  'Seated Cable Row':'back',
+  'Lat Pulldown':'back',
+  'T-Bar Row':'back',
+  'Hyperextensions':'back',
+  'Shrugs':'back',
   // Ramena
-  'Vojenský tlak (OHP)':'shoulders',
-  'Tlak s činkami nad hlavu':'shoulders',
-  'Arnold tlak':'shoulders',
-  'Boční upažování':'shoulders',
-  'Zaklony (rear delt fly)':'shoulders',
-  'Vzpírání činky k bradě':'shoulders',
-  'Tlak na strojích (shoulder press)':'shoulders',
+  'Overhead Press':'shoulders',
+  'Dumbbell Shoulder Press':'shoulders',
+  'Arnold Press':'shoulders',
+  'Lateral Raise':'shoulders',
+  'Rear Delt Fly':'shoulders',
+  'Upright Row':'shoulders',
+  'Shoulder Press Machine':'shoulders',
   // Biceps
-  'Bicepsový zdvih':'biceps',
-  'Zdvih s EZ osou':'biceps',
-  'Kladivo (hammer curl)':'biceps',
-  'Zdvih na kladce':'biceps',
-  'Koncentrovaný zdvih':'biceps',
-  'Zdvih na Scott lavici':'biceps',
+  'Bicep Curl':'biceps',
+  'EZ-Bar Curl':'biceps',
+  'Hammer Curl':'biceps',
+  'Cable Curl':'biceps',
+  'Concentration Curl':'biceps',
+  'Preacher Curl':'biceps',
   // Triceps
-  'Tricepsové kliky (dipy)':'triceps',
-  'Francouzský tlak':'triceps',
-  'Kliky na triceps u kladky':'triceps',
-  'Tlak na triceps obouruč':'triceps',
-  'Kickback s jednoručkou':'triceps',
-  'Úzký bench press':'triceps',
+  'Tricep Dips':'triceps',
+  'Skull Crushers':'triceps',
+  'Tricep Pushdown':'triceps',
+  'Overhead Tricep Extension':'triceps',
+  'Tricep Kickback':'triceps',
+  'Close-Grip Bench Press':'triceps',
   // Břicho
-  'Zkracovačky':'abs',
+  'Crunches':'abs',
   'Plank':'abs',
-  'Zvedání nohou':'abs',
-  'Ruský twist':'abs',
-  'Kolo (bicycle crunch)':'abs',
-  'Břicho na kladce (cable crunch)':'abs',
+  'Leg Raises':'abs',
+  'Russian Twist':'abs',
+  'Bicycle Crunch':'abs',
+  'Cable Crunch':'abs',
   // Stehna přední
-  'Dřep (Squat)':'quads',
-  'Přední dřep (Front squat)':'quads',
-  'Hack dřep':'quads',
-  'Výpady':'quads',
-  'Bulharský dřep':'quads',
-  'Leg press':'quads',
-  'Předkopávání (leg extension)':'quads',
+  'Squat':'quads',
+  'Front Squat':'quads',
+  'Hack Squat':'quads',
+  'Lunges':'quads',
+  'Bulgarian Split Squat':'quads',
+  'Leg Press':'quads',
+  'Leg Extension':'quads',
   // Stehna zadní
-  'Rumunský mrtvý tah':'hamstrings',
-  'Mrtvý tah na jedné noze':'hamstrings',
-  'Leg curl':'hamstrings',
-  'Dobré ráno (good morning)':'hamstrings',
+  'Romanian Deadlift':'hamstrings',
+  'Single-Leg Deadlift':'hamstrings',
+  'Leg Curl':'hamstrings',
+  'Good Morning':'hamstrings',
   // Hýždě
-  'Hip thrust':'glutes',
-  'Glute bridge':'glutes',
-  'Sumo dřep':'glutes',
-  'Kop zánožmo na kladce':'glutes',
-  'Odtahování v kleku (donkey kick)':'glutes',
+  'Hip Thrust':'glutes',
+  'Glute Bridge':'glutes',
+  'Sumo Squat':'glutes',
+  'Cable Kickback':'glutes',
+  'Donkey Kick':'glutes',
   // Lýtka
-  'Výpony na lýtka':'calves',
-  'Výpony vsedě':'calves',
-  'Výpony v předklonu (donkey calf raise)':'calves',
-  'Výpony na leg pressu':'calves',
+  'Standing Calf Raise':'calves',
+  'Seated Calf Raise':'calves',
+  'Donkey Calf Raise':'calves',
+  'Leg Press Calf Raise':'calves',
 };
 const DEFAULT_EXERCISES = Object.keys(DEFAULT_EXERCISE_MUSCLE);
+
+// "back" on the body figure is actually 3 separate visual areas (traps / lats / lower back).
+// Instead of lighting up the whole back for any back exercise, only light the part that
+// exercise actually trains. Exercises not listed here (e.g. custom ones) light the whole area.
+const BACK_SUBPART_BY_EXERCISE = {
+  'Deadlift':'lower',
+  'Sumo Deadlift':'lower',
+  'Hyperextensions':'lower',
+  'Bent-Over Row':'lats',
+  'Pull-ups':'lats',
+  'Chin-ups':'lats',
+  'One-Arm Dumbbell Row':'lats',
+  'Seated Cable Row':'lats',
+  'Lat Pulldown':'lats',
+  'T-Bar Row':'lats',
+  'Shrugs':'traps',
+};
+function backSubpart(exerciseName){
+  return BACK_SUBPART_BY_EXERCISE[exerciseName] || 'all';
+}
 
 const ACHIEVEMENT_DEFS = [
   // Tréninky
@@ -959,7 +1098,10 @@ const ACHIEVEMENT_DEFS = [
   {id:'gold_rank', icon:'🥇', name:'Zlatý standard', desc:'Dosáhni Gold ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 2)},
   {id:'platinum_rank', icon:'💎', name:'Platinový', desc:'Dosáhni Platinum ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 3)},
   {id:'diamond_rank', icon:'💠', name:'Diamantový', desc:'Dosáhni Diamond ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 4)},
-  {id:'legend_rank', icon:'👑', name:'Legenda', desc:'Dosáhni Legend ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 5)},
+  {id:'master_rank', icon:'🔷', name:'Mistrovský', desc:'Dosáhni Master ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 5)},
+  {id:'grandmaster_rank', icon:'🔶', name:'Velmistr', desc:'Dosáhni Grandmaster ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 6)},
+  {id:'legend_rank', icon:'👑', name:'Legenda', desc:'Dosáhni Legend ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 7)},
+  {id:'mythic_rank', icon:'🌟', name:'Mýtický', desc:'Dosáhni nejvyššího Mythic ranku u nějakého cviku.', check: s => Object.entries(s.exercises).some(([n,e]) => rankIndex(e, s.exerciseMuscles[n]) >= 8)},
   {id:'all_muscles', icon:'🧍', name:'Celé tělo', desc:'Zapiš PR pro všech 10 svalových skupin.', check: s => MUSCLE_GROUPS.every(m => Object.entries(s.exercises).some(([n,e]) => s.exerciseMuscles[n] === m.key && rankIndex(e, m.key) >= 0))},
   {id:'rank_master', icon:'🏵️', name:'Mistr těla', desc:'Dosáhni Gold ranku (nebo lepšího) ve všech 10 svalových skupinách.', check: s => MUSCLE_GROUPS.every(m => Object.entries(s.exercises).some(([n,e]) => s.exerciseMuscles[n] === m.key && rankIndex(e, m.key) >= 2))},
   // PR a rozmanitost cviků
@@ -992,10 +1134,11 @@ function loadState(){
         if(!Array.isArray(parsed.manualPRs[k])) parsed.manualPRs[k] = [parsed.manualPRs[k]];
       });
       if(!Array.isArray(parsed.presets)) parsed.presets = [];
+      if(!Array.isArray(parsed.gallery)) parsed.gallery = [];
       return parsed;
     }catch(e){}
   }
-  return {xp:0, workouts:[], exercises:{}, unlockedAchievements:[], profile:{age:null, name:'', avatar:null}, exerciseMuscles:{...DEFAULT_EXERCISE_MUSCLE}, manualPRs:{}, presets:[]};
+  return {xp:0, workouts:[], exercises:{}, unlockedAchievements:[], profile:{age:null, name:'', avatar:null}, exerciseMuscles:{...DEFAULT_EXERCISE_MUSCLE}, manualPRs:{}, presets:[], gallery:[]};
 }
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1012,6 +1155,7 @@ function scheduleCloudSync(){
 let state = loadState();
 let currentWorkoutExercises = []; // [{name, sets:[{weight,reps}]}]
 let activePresetId = null;
+let currentWorkoutPhoto = null;
 
 // ---------- Core formulas ----------
 function ageFactor(age){
@@ -1146,11 +1290,17 @@ function renderBody(){
   MUSCLE_GROUPS.forEach(m => {
     const {idx, exercise} = muscleBestRank(m.key);
     const tier = idx >= 0 ? RANK_TIERS[idx] : null;
+    // "back" has several visually distinct sub-parts (traps/lats/lower back) — only light
+    // the one the winning exercise actually trains, not the whole back. Every other muscle
+    // group has no sub-parts, so activePart stays 'all' and behaves as before.
+    const activePart = (m.key === 'back' && exercise) ? backSubpart(exercise) : 'all';
     const els = document.querySelectorAll(`[data-muscle="${m.key}"]`);
     els.forEach(el => {
-      el.classList.toggle('lit', !!tier);
+      const partMatch = activePart === 'all' || el.dataset.subpart === activePart;
+      const lit = !!tier && partMatch;
+      el.classList.toggle('lit', lit);
       el.classList.toggle('active-filter', muscleFilter === m.key);
-      if(tier){
+      if(lit){
         el.style.fill = `var(--${tier.cls})`;
         el.style.filter = `drop-shadow(0 0 4px var(--${tier.cls})) drop-shadow(0 0 10px var(--${tier.cls})) drop-shadow(0 0 20px var(--${tier.cls}))`;
       } else {
@@ -1160,7 +1310,7 @@ function renderBody(){
       const existingTitle = el.querySelector('title');
       if(existingTitle) existingTitle.remove();
       const title = document.createElementNS('http://www.w3.org/2000/svg','title');
-      title.textContent = tier
+      title.textContent = lit
         ? `${m.label}: ${tier.name} (${exercise})`
         : `${m.label}: zatím netrénováno`;
       el.appendChild(title);
@@ -1240,11 +1390,14 @@ function renderRankTrack(){
 
 function renderProfileHeader(){
   const avatarEl = document.getElementById('dashAvatar');
+  const placeholderEl = document.getElementById('dashAvatarPlaceholder');
   if(state.profile.avatar){
     avatarEl.src = state.profile.avatar;
     avatarEl.style.display = 'block';
+    placeholderEl.style.display = 'none';
   } else {
     avatarEl.style.display = 'none';
+    placeholderEl.style.display = 'flex';
   }
   document.getElementById('dashName').textContent = state.profile.name || 'Bez jména';
   document.getElementById('dashAge').textContent = state.profile.age ? `${state.profile.age} let` : '';
@@ -1273,15 +1426,6 @@ function renderDashboard(){
     entries.sort((a,b) => rankIndex(b[1], state.exerciseMuscles[b[0]]) - rankIndex(a[1], state.exerciseMuscles[a[0]]));
     container.innerHTML = entries.slice(0,6).map(([name, ex]) => exCardHTML(name, ex)).join('');
   }
-
-  // last workout
-  const lw = document.getElementById('lastWorkout');
-  if(state.workouts.length === 0){
-    lw.innerHTML = '<div class="empty">Ještě jsi nic nezapsal. Mrkni na záložku „Zapsat trénink“.</div>';
-  } else {
-    const last = state.workouts[state.workouts.length-1];
-    lw.innerHTML = historyItemHTML(last);
-  }
 }
 
 function exCardHTML(name, ex){
@@ -1299,7 +1443,6 @@ function exCardHTML(name, ex){
     ${muscleGroup ? `<div class="tiny" style="margin-bottom:4px">💪 ${muscleGroup.label}</div>` : ''}
     <a href="${exerciseDemoUrl(name)}" target="_blank" rel="noopener" class="tiny" style="display:inline-block; margin-bottom:6px">▶ Jak se to dělá</a>
     ${pr ? `<div class="pr-line"><span class="pr-value">${pr.weight}&nbsp;kg × ${pr.reps}</span><span class="tiny">PR${pr.manual ? ' · ručně' : ''} · ${pr.date}</span></div>` : ''}
-    <div class="best">Odh. maximum (1RM): <b>${ex.best.toFixed(1)} kg</b>${state.profile.age && state.profile.age < 18 ? ' <span class="tiny">(upraveno pro věk '+state.profile.age+')</span>' : ''}</div>
     ${tier ? `<span class="pill ${tier.cls}">${tier.icon} ${tier.name}</span>` : '<span class="pill unranked">Bez ranku</span>'}
     <div class="progress-mini"><div style="width:${prog.pct}%"></div></div>
     <div class="tiny" style="margin-top:6px">${prog.next ? `Do ranku ${prog.next.name}: ${Math.round(prog.pct)}%` : 'Max rank dosažen!'}</div>
@@ -1343,6 +1486,7 @@ function renderLogTab(){
   if(!document.getElementById('workoutDate').value){
     document.getElementById('workoutDate').value = fmtDate(new Date());
   }
+  updateWorkoutPhotoPreview();
 
   const streakPct = streakBonusPct(computeStreak(state));
   document.getElementById('logStreakBonusLbl').textContent = streakPct > 0
@@ -1398,6 +1542,54 @@ function openPresetModal(){
 function closePresetModal(){
   document.getElementById('presetModal').style.display = 'none';
 }
+
+// ---------- My gallery (photos visible to friends) ----------
+function openGalleryModal(){
+  renderGalleryGrid();
+  document.getElementById('galleryModal').style.display = 'flex';
+}
+function closeGalleryModal(){
+  document.getElementById('galleryModal').style.display = 'none';
+}
+function renderGalleryGrid(){
+  const grid = document.getElementById('galleryGrid');
+  const photos = state.gallery || [];
+  if(photos.length === 0){
+    grid.innerHTML = '<div class="empty">Zatím žádné fotky.</div>';
+    return;
+  }
+  grid.innerHTML = photos.map((src, i) => `
+    <div class="gallery-thumb">
+      <img src="${src}" alt="" onclick="openAvatarLightbox(this.src)">
+      <button type="button" data-rmgallery="${i}">✕</button>
+    </div>
+  `).join('');
+}
+document.getElementById('openGalleryBtn').addEventListener('click', openGalleryModal);
+document.getElementById('closeGalleryModalBtn').addEventListener('click', closeGalleryModal);
+document.getElementById('galleryPhotoInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 8 * 1024 * 1024){
+    showToast('Obrázek je moc velký, zkus prosím menší (max 8 MB).', 'warn');
+    e.target.value = '';
+    return;
+  }
+  resizeImageFile(file, 700, 0.72, (dataUrl) => {
+    if(!state.gallery) state.gallery = [];
+    state.gallery.push(dataUrl);
+    saveState();
+    renderGalleryGrid();
+    e.target.value = '';
+  });
+});
+document.addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-rmgallery]');
+  if(!rm) return;
+  state.gallery.splice(parseInt(rm.dataset.rmgallery, 10), 1);
+  saveState();
+  renderGalleryGrid();
+});
 function renderPresetManageList(){
   const wrap = document.getElementById('presetManageList');
   const presets = state.presets || [];
@@ -1522,13 +1714,45 @@ function renderExercises(){
   container.innerHTML = entries.map(([name, ex]) => exCardHTML(name, ex)).join('');
 }
 
-function historyItemHTML(w){
+function historyItemHTML(w, idx, prefix){
+  const detailsId = `${prefix || 'h'}Details_${idx}`;
   const xp = w.xpEarned != null ? w.xpEarned : xpForWorkout(w);
   return `<div class="history-item">
-    <div class="hdate"><span>${w.name ? `${escapeHtml(w.name)} · ${w.date}` : w.date}</span><span class="xp-tag">+${xp} XP</span></div>
-    ${w.exercises.map(e => `<div class="hex">${escapeHtml(e.name)}: ${e.sets.map(s => `${s.weight}kg×${s.reps}`).join(', ')}</div>`).join('')}
+    <div class="hrow" data-togglehist="${detailsId}">
+      ${w.photo ? `<img class="hthumb avatar-clickable" src="${w.photo}" alt="" onclick="event.stopPropagation(); openAvatarLightbox(this.src);">` : '<div class="hthumb hthumb-empty">🏋️</div>'}
+      <div class="hinfo">
+        <div class="hname">${w.name ? escapeHtml(w.name) : w.date}</div>
+        ${w.name ? `<div class="tiny">${w.date}</div>` : ''}
+      </div>
+      <span class="hchevron">▾</span>
+    </div>
+    <div class="hdetails" id="${detailsId}">
+      <span class="xp-tag">+${xp} XP</span>
+      ${w.photo ? `<img class="hphoto-full avatar-clickable" src="${w.photo}" alt="" onclick="openAvatarLightbox(this.src)">` : ''}
+      ${w.exercises.map(e => `<div class="hex">${escapeHtml(e.name)}: ${e.sets.map(s => `${s.weight}kg×${s.reps}`).join(', ')}</div>`).join('')}
+    </div>
   </div>`;
 }
+document.addEventListener('click', (e) => {
+  const row = e.target.closest('[data-togglehist]');
+  if(!row) return;
+  const details = document.getElementById(row.dataset.togglehist);
+  if(!details) return;
+  const item = row.closest('.history-item');
+  const show = details.style.display !== 'block';
+  details.style.display = show ? 'block' : 'none';
+  if(item) item.classList.toggle('expanded', show);
+});
+document.addEventListener('click', (e) => {
+  const row = e.target.closest('[data-togglefriend]');
+  if(!row) return;
+  const details = document.getElementById(row.dataset.togglefriend);
+  if(!details) return;
+  const item = row.closest('.friend-card');
+  const show = details.style.display !== 'block';
+  details.style.display = show ? 'block' : 'none';
+  if(item) item.classList.toggle('expanded', show);
+});
 
 function renderHistory(){
   const container = document.getElementById('historyList');
@@ -1537,7 +1761,7 @@ function renderHistory(){
     return;
   }
   const sorted = [...state.workouts].sort((a,b) => b.date.localeCompare(a.date));
-  container.innerHTML = sorted.map(historyItemHTML).join('');
+  container.innerHTML = sorted.map((w, i) => historyItemHTML(w, i, 'hist')).join('');
 }
 
 function renderAchievements(){
@@ -1727,7 +1951,7 @@ document.getElementById('prLogSaveBtn').addEventListener('click', () => {
 
   renderAll();
   showToast(`PR uloženo: ${name} — ${weight} kg × ${reps}`);
-  newlyUnlocked.forEach(a => showToast(`Odznak odemčen: ${a.icon} ${a.name}`));
+  queueAchievementPopups(newlyUnlocked);
 });
 
 function addSet(ei){
@@ -1750,6 +1974,8 @@ document.getElementById('clearWorkoutBtn').addEventListener('click', async () =>
   if(currentWorkoutExercises.length && !await showConfirm('Zrušit rozepsaný trénink?')) return;
   currentWorkoutExercises = [];
   activePresetId = null;
+  currentWorkoutPhoto = null;
+  document.getElementById('workoutPhotoInput').value = '';
   renderLogTab();
 });
 
@@ -1763,7 +1989,7 @@ document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
     showToast('Přidej alespoň jeden cvik s vyplněnou váhou a počtem opakování.', 'warn');
     return;
   }
-  const workout = {date, name, exercises: cleanExercises};
+  const workout = {date, name, exercises: cleanExercises, photo: currentWorkoutPhoto || null};
   state.workouts.push(workout);
 
   const streak = computeStreak(state);
@@ -1778,7 +2004,9 @@ document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
 
   currentWorkoutExercises = [];
   activePresetId = null;
+  currentWorkoutPhoto = null;
   document.getElementById('workoutName').value = '';
+  document.getElementById('workoutPhotoInput').value = '';
   const newlyUnlocked = checkAchievements();
   saveState();
   renderAll();
@@ -1791,7 +2019,7 @@ document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
   if(afterRank.name !== beforeRank.name){
     showToast(`Nový rank: ${afterRank.icon} ${afterRank.name}!`);
   }
-  newlyUnlocked.forEach(a => showToast(`Odznak odemčen: ${a.icon} ${a.name}`));
+  queueAchievementPopups(newlyUnlocked);
 });
 
 function checkAchievements(){
@@ -1811,6 +2039,33 @@ function showToast(msg, type){
   t.innerHTML = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 4200);
+}
+
+// ---------- Achievement unlock animation ----------
+let achievementQueue = [];
+let achievementPopupShowing = false;
+function queueAchievementPopups(list){
+  if(!list || !list.length) return;
+  achievementQueue.push(...list);
+  if(!achievementPopupShowing) showNextAchievementPopup();
+}
+function showNextAchievementPopup(){
+  const a = achievementQueue.shift();
+  if(!a){ achievementPopupShowing = false; return; }
+  achievementPopupShowing = true;
+  const popup = document.getElementById('achievementPopup');
+  document.getElementById('achievementPopupIcon').textContent = a.icon;
+  document.getElementById('achievementPopupName').textContent = a.name;
+  popup.style.display = 'flex';
+  popup.classList.remove('show');
+  requestAnimationFrame(() => requestAnimationFrame(() => popup.classList.add('show')));
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => {
+      popup.style.display = 'none';
+      showNextAchievementPopup();
+    }, 350);
+  }, 2200);
 }
 
 // ---------- Custom prompt/confirm (native prompt()/confirm()/alert() are unreliable in installed PWAs) ----------
@@ -1873,12 +2128,13 @@ function updateNotifyBtn(){
   }
   btn.style.display = 'inline';
   if(Notification.permission === 'denied'){
-    btn.textContent = '🔕 Oznámení blokovaná (povol je v nastavení prohlížeče)';
+    btn.textContent = '🔕 Blokováno';
+    btn.title = 'Oznámení jsou blokovaná — povol je v nastavení prohlížeče.';
     return;
   }
-  btn.textContent = (notifyEnabled() && Notification.permission === 'granted')
-    ? '🔔 Oznámení o řadě zapnutá (vypnout)'
-    : '🔔 Povolit oznámení o řadě';
+  const on = notifyEnabled() && Notification.permission === 'granted';
+  btn.textContent = on ? '🔔 Zapnuto' : '🔔 Zapnout oznámení';
+  btn.title = on ? 'Oznámení o řadě jsou zapnutá — klikni pro vypnutí.' : 'Zapnout oznámení o denní řadě.';
 }
 document.getElementById('notifyToggleBtn').addEventListener('click', async () => {
   if(notifyEnabled()){
@@ -1935,6 +2191,16 @@ function czechDaySuffix(n){
   if(n >= 2 && n <= 4) return 'dny';
   return 'dní';
 }
+function sendNotification(title, body, tag){
+  if(!notifyEnabled() || !('Notification' in window) || Notification.permission !== 'granted') return;
+  if('serviceWorker' in navigator && navigator.serviceWorker.ready){
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification(title, {body, icon:'icon-192.png', badge:'icon-192.png', tag});
+    }).catch(() => { try{ new Notification(title, {body, icon:'icon-192.png'}); }catch(e){} });
+  } else {
+    try{ new Notification(title, {body, icon:'icon-192.png'}); }catch(e){}
+  }
+}
 function maybeSendStreakReminder(force){
   if(!notifyEnabled() || !('Notification' in window) || Notification.permission !== 'granted') return;
   const today = fmtDate(new Date());
@@ -1948,14 +2214,7 @@ function maybeSendStreakReminder(force){
   const body = streak > 0
     ? `Máš řadu ${streak} ${czechDaySuffix(streak)} — dnes ještě nemáš zapsaný trénink. Nezlom si ji!`
     : 'Dnes ještě nemáš zapsaný trénink. Pojď na to! 💪';
-  const title = '🔥 IronRank — denní řada';
-  if('serviceWorker' in navigator && navigator.serviceWorker.ready){
-    navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification(title, {body, icon:'icon-192.png', badge:'icon-192.png', tag:'streak-reminder'});
-    }).catch(() => { try{ new Notification(title, {body, icon:'icon-192.png'}); }catch(e){} });
-  } else {
-    try{ new Notification(title, {body, icon:'icon-192.png'}); }catch(e){}
-  }
+  sendNotification('🔥 IronRank — denní řada', body, 'streak-reminder');
   localStorage.setItem(NOTIFY_LAST_KEY, today);
 }
 document.addEventListener('visibilitychange', () => {
@@ -2023,10 +2282,10 @@ document.addEventListener('click', (e) => {
 let pendingAvatar = state.profile.avatar || null;
 
 function openProfileModal(){
-  const isFirstTime = !state.profile.age || !state.profile.name || !state.profile.avatar;
+  const isFirstTime = !state.profile.age || !state.profile.name;
   document.getElementById('modalTitle').textContent = isFirstTime ? '📝 Registrace' : 'Upravit profil';
   document.getElementById('modalDesc').textContent = isFirstTime
-    ? 'Než začneš, vyplň si profil — jméno, věk a profilovku. Věk používáme k tomu, aby odhady tvého maxima (1RM) seděly na tvůj věk a nevypadaly nesmyslně vysoko — ranky pak stejně počítáme jen podle tvého vlastního zlepšení, ne podle cizích tabulek.'
+    ? 'Než začneš, vyplň si jméno a věk. Věk používáme k tomu, aby odhady tvého maxima (1RM) seděly na tvůj věk a nevypadaly nesmyslně vysoko — ranky pak stejně počítáme jen podle tvého vlastního zlepšení, ne podle cizích tabulek. Profilovka je nepovinná.'
     : 'Uprav si jméno, věk nebo profilovku.';
   document.getElementById('ageInput').value = state.profile.age || '';
   document.getElementById('nameInput').value = state.profile.name || '';
@@ -2051,36 +2310,174 @@ function updateAvatarPreview(){
     placeholder.style.display = 'flex';
   }
 }
-function resizeAvatar(file, callback){
-  const reader = new FileReader();
-  reader.onload = () => {
-    const img = new Image();
-    img.onload = () => {
-      const size = 128;
-      const canvas = document.createElement('canvas');
-      canvas.width = size; canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      const scale = Math.max(size / img.width, size / img.height);
-      const dw = img.width * scale, dh = img.height * scale;
-      ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
-      callback(canvas.toDataURL('image/jpeg', 0.75));
-    };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
-}
 document.getElementById('avatarInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
   if(file.size > 8 * 1024 * 1024){
     showToast('Obrázek je moc velký, zkus prosím menší (max 8 MB).', 'warn');
+    e.target.value = '';
     return;
   }
-  resizeAvatar(file, (dataUrl) => {
-    pendingAvatar = dataUrl;
-    updateAvatarPreview();
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => openCropModal(img);
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// ---------- Workout photo (optional, shown as a thumbnail in history) ----------
+function resizeImageFile(file, maxDim, quality, callback){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function updateWorkoutPhotoPreview(){
+  const wrap = document.getElementById('workoutPhotoPreviewWrap');
+  const img = document.getElementById('workoutPhotoPreview');
+  if(currentWorkoutPhoto){
+    img.src = currentWorkoutPhoto;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+document.getElementById('workoutPhotoInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 8 * 1024 * 1024){
+    showToast('Obrázek je moc velký, zkus prosím menší (max 8 MB).', 'warn');
+    e.target.value = '';
+    return;
+  }
+  resizeImageFile(file, 800, 0.75, (dataUrl) => {
+    currentWorkoutPhoto = dataUrl;
+    updateWorkoutPhotoPreview();
   });
 });
+document.getElementById('removeWorkoutPhotoBtn').addEventListener('click', () => {
+  currentWorkoutPhoto = null;
+  document.getElementById('workoutPhotoInput').value = '';
+  updateWorkoutPhotoPreview();
+});
+
+// ---------- Avatar crop (drag to pan, slider to zoom — like Instagram's avatar picker) ----------
+const CROP_SIZE = 260;
+const AVATAR_OUT = 160;
+let cropState = {img:null, baseScale:1, scale:1, tx:0, ty:0, dragging:false, startX:0, startY:0, startTx:0, startTy:0};
+
+function openCropModal(img){
+  cropState.img = img;
+  cropState.baseScale = Math.max(CROP_SIZE / img.width, CROP_SIZE / img.height);
+  cropState.scale = cropState.baseScale;
+  const dw = img.width * cropState.scale, dh = img.height * cropState.scale;
+  cropState.tx = (CROP_SIZE - dw) / 2;
+  cropState.ty = (CROP_SIZE - dh) / 2;
+  document.getElementById('cropImage').src = img.src;
+  document.getElementById('cropZoom').value = 100;
+  applyCropTransform();
+  document.getElementById('cropModal').style.display = 'flex';
+}
+function clampCropOffset(){
+  const img = cropState.img;
+  const dw = img.width * cropState.scale, dh = img.height * cropState.scale;
+  cropState.tx = Math.min(0, Math.max(CROP_SIZE - dw, cropState.tx));
+  cropState.ty = Math.min(0, Math.max(CROP_SIZE - dh, cropState.ty));
+}
+function applyCropTransform(){
+  if(!cropState.img) return;
+  clampCropOffset();
+  const img = cropState.img;
+  const dw = img.width * cropState.scale, dh = img.height * cropState.scale;
+  const cropImg = document.getElementById('cropImage');
+  cropImg.style.width = dw + 'px';
+  cropImg.style.height = dh + 'px';
+  cropImg.style.left = cropState.tx + 'px';
+  cropImg.style.top = cropState.ty + 'px';
+}
+document.getElementById('cropZoom').addEventListener('input', (e) => {
+  if(!cropState.img) return;
+  const mult = parseInt(e.target.value, 10) / 100; // 1..3
+  const prevScale = cropState.scale;
+  const cx = CROP_SIZE / 2, cy = CROP_SIZE / 2;
+  const imgX = (cx - cropState.tx) / prevScale;
+  const imgY = (cy - cropState.ty) / prevScale;
+  cropState.scale = cropState.baseScale * mult;
+  cropState.tx = cx - imgX * cropState.scale;
+  cropState.ty = cy - imgY * cropState.scale;
+  applyCropTransform();
+});
+function cropPointerDown(x, y){
+  if(!cropState.img) return;
+  cropState.dragging = true;
+  cropState.startX = x; cropState.startY = y;
+  cropState.startTx = cropState.tx; cropState.startTy = cropState.ty;
+  document.getElementById('cropStage').classList.add('dragging');
+}
+function cropPointerMove(x, y){
+  if(!cropState.dragging) return;
+  cropState.tx = cropState.startTx + (x - cropState.startX);
+  cropState.ty = cropState.startTy + (y - cropState.startY);
+  applyCropTransform();
+}
+function cropPointerUp(){
+  cropState.dragging = false;
+  document.getElementById('cropStage').classList.remove('dragging');
+}
+const cropStage = document.getElementById('cropStage');
+cropStage.addEventListener('mousedown', (e) => cropPointerDown(e.clientX, e.clientY));
+window.addEventListener('mousemove', (e) => cropPointerMove(e.clientX, e.clientY));
+window.addEventListener('mouseup', cropPointerUp);
+cropStage.addEventListener('touchstart', (e) => { const t = e.touches[0]; cropPointerDown(t.clientX, t.clientY); }, {passive:true});
+cropStage.addEventListener('touchmove', (e) => { const t = e.touches[0]; cropPointerMove(t.clientX, t.clientY); e.preventDefault(); }, {passive:false});
+cropStage.addEventListener('touchend', cropPointerUp);
+
+document.getElementById('cropCancelBtn').addEventListener('click', () => {
+  document.getElementById('cropModal').style.display = 'none';
+  document.getElementById('avatarInput').value = '';
+  cropState.img = null;
+});
+document.getElementById('cropConfirmBtn').addEventListener('click', () => {
+  const img = cropState.img;
+  if(!img) return;
+  const sx = -cropState.tx / cropState.scale;
+  const sy = -cropState.ty / cropState.scale;
+  const sSize = CROP_SIZE / cropState.scale;
+  const canvas = document.createElement('canvas');
+  canvas.width = AVATAR_OUT; canvas.height = AVATAR_OUT;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, AVATAR_OUT, AVATAR_OUT);
+  pendingAvatar = canvas.toDataURL('image/jpeg', 0.85);
+  updateAvatarPreview();
+  document.getElementById('cropModal').style.display = 'none';
+  cropState.img = null;
+});
+
+// ---------- Avatar lightbox (click any profile picture to see it bigger) ----------
+function openAvatarLightbox(src){
+  if(!src) return;
+  document.getElementById('avatarLightboxImg').src = src;
+  document.getElementById('avatarLightbox').style.display = 'flex';
+}
+function closeAvatarLightbox(){
+  document.getElementById('avatarLightbox').style.display = 'none';
+}
+document.getElementById('avatarLightbox').addEventListener('click', (e) => {
+  if(e.target.id === 'avatarLightbox') closeAvatarLightbox();
+});
+
 document.getElementById('saveAgeBtn').addEventListener('click', () => {
   const val = parseInt(document.getElementById('ageInput').value, 10);
   const name = document.getElementById('nameInput').value.trim();
@@ -2090,10 +2487,6 @@ document.getElementById('saveAgeBtn').addEventListener('click', () => {
   }
   if(!val || val < 8 || val > 100){
     showToast('Zadej platný věk (8–100).', 'warn');
-    return;
-  }
-  if(!pendingAvatar){
-    showToast('Nahraj prosím profilovku.', 'warn');
     return;
   }
   state.profile.age = val;
@@ -2127,7 +2520,7 @@ document.getElementById('authGuestBtn').addEventListener('click', () => {
   isGuest = true;
   localStorage.setItem('ironrank_guest', '1');
   document.getElementById('authModal').style.display = 'none';
-  if(!state.profile.age || !state.profile.name || !state.profile.avatar){
+  if(!state.profile.age || !state.profile.name){
     openProfileModal();
   }
   renderAll();
@@ -2235,19 +2628,22 @@ function friendRankIndex(ex, muscleKey){
   for(let i=0;i<RANK_TIERS.length;i++){ if(ratio >= RANK_TIERS[i].mult) idx = i; }
   return idx;
 }
-function friendMuscleTier(data, muscleKey){
+function friendMuscleBest(data, muscleKey){
   const exMuscles = data.exerciseMuscles || {};
-  let best = -1;
+  let bestIdx = -1, bestExercise = null;
   Object.entries(data.exercises || {}).forEach(([name, ex]) => {
     if(!ex || !ex.baseline) return;
     if(exMuscles[name] !== muscleKey) return;
     const idx = friendRankIndex(ex, muscleKey);
-    if(idx > best) best = idx;
+    if(idx > bestIdx){ bestIdx = idx; bestExercise = name; }
   });
-  return best >= 0 ? RANK_TIERS[best] : null;
+  return {idx: bestIdx, exercise: bestExercise};
 }
-function fStyle(data, muscleKey){
-  const tier = friendMuscleTier(data, muscleKey);
+function fStyle(data, muscleKey, subpart){
+  const {idx, exercise} = friendMuscleBest(data, muscleKey);
+  if(idx < 0) return '';
+  if(subpart && muscleKey === 'back' && backSubpart(exercise) !== subpart) return '';
+  const tier = RANK_TIERS[idx];
   if(!tier) return '';
   return ` style="fill:var(--${tier.cls});filter:drop-shadow(0 0 3px var(--${tier.cls})) drop-shadow(0 0 8px var(--${tier.cls}))"`;
 }
@@ -2292,12 +2688,12 @@ function friendBodyBackSvg(data){
     <ellipse fill="url(#headGrad)" stroke="#eef1f6" stroke-width="2.5" cx="120" cy="44" rx="25" ry="29"/>
     <path class="bodyhair" d="M95,32 C95,15 106,6 120,6 C134,6 145,15 145,32 C145,44 140,54 132,60 C138,50 138,30 120,30 C102,30 102,50 108,60 C100,54 95,44 95,32 Z"/>
     <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
-    <path class="musclepart"${fStyle(data,'back')} d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
+    <path class="musclepart"${fStyle(data,'back','traps')} d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
     <path class="musclepart"${fStyle(data,'shoulders')} d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
     <path class="musclepart"${fStyle(data,'shoulders')} d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
-    <path class="musclepart"${fStyle(data,'back')} d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
-    <path class="musclepart"${fStyle(data,'back')} d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
-    <rect class="musclepart"${fStyle(data,'back')} x="104" y="166" width="32" height="34" rx="12"/>
+    <path class="musclepart"${fStyle(data,'back','lats')} d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
+    <path class="musclepart"${fStyle(data,'back','lats')} d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
+    <rect class="musclepart"${fStyle(data,'back','lower')} x="104" y="166" width="32" height="34" rx="12"/>
     <path class="musclepart"${fStyle(data,'triceps')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
     <path class="musclepart"${fStyle(data,'triceps')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
     <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
@@ -2330,12 +2726,21 @@ function renderFriends(){
     const entries = Object.entries(data.exercises || {}).filter(([,e]) => e && e.baseline);
     entries.sort((a,b) => friendRankIndex(b[1], exMuscles[b[0]]) - friendRankIndex(a[1], exMuscles[a[0]]));
     const top = entries.slice(0,3);
+    const gallery = data.gallery || [];
+    const detailsId = `friendDetails_${uid}`;
     return `<div class="friend-card">
-      ${prof.avatar ? `<img src="${prof.avatar}" alt="">` : `<div style="width:52px;height:52px;border-radius:50%;background:var(--card2)"></div>`}
-      <div style="flex:1; min-width:180px">
-        <div class="fname">${escapeHtml(prof.name || 'Bez jména')}</div>
-        <div class="fmeta">${prof.age ? prof.age + ' let' : ''}</div>
-        <div class="frank" style="color:${rank.color}">${rank.icon} ${rank.name} · Level ${level}</div>
+      <div class="frow" data-togglefriend="${detailsId}">
+        ${prof.avatar
+          ? `<img src="${prof.avatar}" alt="" class="favatar avatar-clickable" onclick="event.stopPropagation(); openAvatarLightbox(this.src);">`
+          : `<div class="avatar-placeholder" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--accent);font-size:20px;flex-shrink:0">👤</div>`}
+        <div class="finfo">
+          <div class="fname">${escapeHtml(prof.name || 'Bez jména')}</div>
+          <div class="fmeta">${prof.age ? prof.age + ' let · ' : ''}Level ${level}</div>
+        </div>
+        <span class="fchevron">▾</span>
+      </div>
+      <div class="fdetails" id="${detailsId}">
+        <div class="frank" style="color:${rank.color}">${rank.icon} ${rank.name}</div>
         <div class="fprs">
           ${top.length ? top.map(([name, ex]) => {
             const idx = friendRankIndex(ex, exMuscles[name]);
@@ -2344,9 +2749,10 @@ function renderFriends(){
             return `<span class="fpr-tag">${tier ? tier.icon : ''} ${escapeHtml(name)}${pr ? `: ${pr.weight}kg×${pr.reps}` : ''}</span>`;
           }).join('') : '<span class="tiny">Zatím žádné PR</span>'}
         </div>
+        <div class="fbody">${friendBodyFrontSvg(data)}${friendBodyBackSvg(data)}</div>
+        ${gallery.length ? `<div class="gallery-grid">${gallery.map(src => `<div class="gallery-thumb"><img src="${src}" alt="" onclick="openAvatarLightbox(this.src)"></div>`).join('')}</div>` : ''}
+        <button class="friend-remove" data-removefriend="${uid}">Odebrat</button>
       </div>
-      <div class="fbody">${friendBodyFrontSvg(data)}${friendBodyBackSvg(data)}</div>
-      <button class="friend-remove" data-removefriend="${uid}">Odebrat</button>
     </div>`;
   }).join('');
 }
@@ -2361,7 +2767,7 @@ auth.onAuthStateChanged(user => {
     friendProfiles = {};
     if(isGuest){
       document.getElementById('authModal').style.display = 'none';
-      if(!state.profile.age || !state.profile.name || !state.profile.avatar){
+      if(!state.profile.age || !state.profile.name){
         openProfileModal();
       }
       renderAll();
@@ -2384,13 +2790,14 @@ auth.onAuthStateChanged(user => {
       state.exerciseMuscles = {...DEFAULT_EXERCISE_MUSCLE, ...(state.exerciseMuscles || {})};
       if(!state.manualPRs) state.manualPRs = {};
       if(!Array.isArray(state.presets)) state.presets = [];
+      if(!Array.isArray(state.gallery)) state.gallery = [];
       recomputeExerciseStats();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } else if(wasGuest){
       // fresh account created from guest mode — push existing local progress up to the cloud
       db.collection('users').doc(user.uid).set(state).catch(e => console.error('cloud sync failed', e));
     }
-    if(!state.profile.age || !state.profile.name || !state.profile.avatar){
+    if(!state.profile.age || !state.profile.name){
       openProfileModal();
     }
     renderAll();
