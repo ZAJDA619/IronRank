@@ -453,9 +453,12 @@
         <input type="number" id="prRepsInput" min="1" step="1">
       </div>
     </div>
-    <div class="flexend">
-      <button class="btn secondary" id="cancelPRBtn">Zrušit</button>
-      <button class="btn" id="savePRBtn">Uložit PR</button>
+    <div class="flexend" style="justify-content:space-between">
+      <button class="btn danger small" id="deletePRBtn">🗑 Smazat PR</button>
+      <div style="display:flex; gap:8px">
+        <button class="btn secondary" id="cancelPRBtn">Zrušit</button>
+        <button class="btn" id="savePRBtn">Uložit PR</button>
+      </div>
     </div>
   </div>
 </div>
@@ -856,16 +859,13 @@
   <!-- FRIENDS -->
   <section id="tab-friends" style="display:none">
     <div class="card">
-      <h2>👥 Přátelé</h2>
+      <h2>👥 Přátelé <button class="btn secondary small" id="openGalleryBtn" style="margin-left:auto">🖼️ Moje galerie</button></h2>
       <div style="display:flex; gap:16px; align-items:flex-end">
         <div style="flex:1; min-width:0">
           <label>E-mail kamaráda</label>
           <input type="email" id="friendEmailInput" placeholder="kamarad@email.cz">
         </div>
-        <div style="display:flex; flex-direction:column; gap:8px">
-          <button class="btn secondary small" id="openGalleryBtn">🖼️ Moje galerie</button>
-          <button class="btn small" id="addFriendBtn" style="height:38px; display:flex; align-items:center; justify-content:center; padding:0 14px">Přidat přítele</button>
-        </div>
+        <button class="btn" id="addFriendBtn" style="height:38px; display:flex; align-items:center; justify-content:center; padding:0 14px">Přidat přítele</button>
       </div>
       <div class="tiny" id="friendAddMsg" style="margin-top:8px"></div>
     </div>
@@ -876,6 +876,15 @@
   <section id="tab-history" style="display:none">
     <div class="card">
       <h2>Historie tréninků</h2>
+      <div class="tiny" id="firstWorkoutInfo" style="margin-bottom:12px"></div>
+      <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:16px">
+        <div style="flex:1">
+          <label>Najít trénink podle data</label>
+          <input type="date" id="historySearchDate">
+        </div>
+        <button class="btn secondary" id="historySearchBtn" style="height:38px">Najít</button>
+        <button class="btn secondary small" id="historySearchClearBtn" style="display:none; height:38px">✕</button>
+      </div>
       <div id="historyList"><div class="empty">Zatím žádné tréninky.</div></div>
     </div>
   </section>
@@ -1730,6 +1739,7 @@ function historyItemHTML(w, idx, prefix){
       <span class="xp-tag">+${xp} XP</span>
       ${w.photo ? `<img class="hphoto-full avatar-clickable" src="${w.photo}" alt="" onclick="openAvatarLightbox(this.src)">` : ''}
       ${w.exercises.map(e => `<div class="hex">${escapeHtml(e.name)}: ${e.sets.map(s => `${s.weight}kg×${s.reps}`).join(', ')}</div>`).join('')}
+      ${prefix === 'hist' ? `<button class="btn danger small" data-delworkout="${state.workouts.indexOf(w)}" style="margin-top:10px">🗑 Smazat trénink</button>` : ''}
     </div>
   </div>`;
 }
@@ -1753,14 +1763,63 @@ document.addEventListener('click', (e) => {
   details.style.display = show ? 'block' : 'none';
   if(item) item.classList.toggle('expanded', show);
 });
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-delworkout]');
+  if(!btn) return;
+  const idx = parseInt(btn.dataset.delworkout, 10);
+  const workout = state.workouts[idx];
+  if(!workout) return;
+  const label = workout.name ? `${escapeHtml(workout.name)} (${workout.date})` : workout.date;
+  if(!await showConfirm(`Smazat trénink „${label}“? Odebere se i jeho XP (případně i level).`)) return;
+  const xpToRemove = workout.xpEarned != null ? workout.xpEarned : xpForWorkout(workout);
+  state.xp = Math.max(0, state.xp - xpToRemove);
+  state.workouts.splice(idx, 1);
+  saveState();
+  renderAll();
+  showToast('Trénink smazán.');
+});
+
+let historyDateFilter = null;
+document.getElementById('historySearchBtn').addEventListener('click', () => {
+  const val = document.getElementById('historySearchDate').value;
+  if(!val){
+    showToast('Nejdřív vyber datum.', 'warn');
+    return;
+  }
+  historyDateFilter = val;
+  renderHistory();
+});
+document.getElementById('historySearchClearBtn').addEventListener('click', () => {
+  historyDateFilter = null;
+  document.getElementById('historySearchDate').value = '';
+  renderHistory();
+});
 
 function renderHistory(){
   const container = document.getElementById('historyList');
+  const infoEl = document.getElementById('firstWorkoutInfo');
+  const clearBtn = document.getElementById('historySearchClearBtn');
+  if(clearBtn) clearBtn.style.display = historyDateFilter ? 'inline-flex' : 'none';
+
   if(state.workouts.length === 0){
+    if(infoEl) infoEl.textContent = '';
     container.innerHTML = '<div class="empty">Zatím žádné tréninky.</div>';
     return;
   }
-  const sorted = [...state.workouts].sort((a,b) => b.date.localeCompare(a.date));
+  if(infoEl){
+    const firstDate = [...state.workouts].map(w => w.date).sort()[0];
+    infoEl.textContent = `📅 První trénink: ${firstDate}`;
+  }
+
+  let list = state.workouts;
+  if(historyDateFilter){
+    list = list.filter(w => w.date === historyDateFilter);
+    if(list.length === 0){
+      container.innerHTML = `<div class="empty">Pro ${historyDateFilter} nemáš zapsaný žádný trénink.</div>`;
+      return;
+    }
+  }
+  const sorted = [...list].sort((a,b) => b.date.localeCompare(a.date));
   container.innerHTML = sorted.map((w, i) => historyItemHTML(w, i, 'hist')).join('');
 }
 
@@ -2254,6 +2313,17 @@ function closePRModal(){
   prEditingExercise = null;
 }
 document.getElementById('cancelPRBtn').addEventListener('click', closePRModal);
+document.getElementById('deletePRBtn').addEventListener('click', async () => {
+  if(!prEditingExercise) return;
+  const name = prEditingExercise;
+  if(!await showConfirm(`Smazat celý PR záznam pro „${name}“? Cvik tím ztratí rank, dokud nezapíšeš nový PR.`)) return;
+  delete state.manualPRs[name];
+  recomputeExerciseStats();
+  saveState();
+  closePRModal();
+  renderAll();
+  showToast('PR smazán.');
+});
 document.getElementById('savePRBtn').addEventListener('click', () => {
   const w = parseFloat(document.getElementById('prWeightInput').value);
   const r = parseInt(document.getElementById('prRepsInput').value, 10);
