@@ -98,6 +98,17 @@
   }
   .card h2{margin:0 0 14px; font-size:17px; display:flex; align-items:center; gap:8px;}
   .card h2 .badge-count{background:var(--card2); color:var(--muted); font-size:13px; padding:2px 8px; border-radius:10px;}
+  .badge-count{background:var(--card2); color:var(--muted); font-size:13px; padding:2px 8px; border-radius:10px; font-weight:600;}
+
+  .log-section{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
+  .log-section-title{font-weight:800; font-size:15px; margin-bottom:4px; display:flex; align-items:center; gap:8px;}
+  .log-details-toggle{
+    width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px;
+    background:var(--card2); border:1px solid var(--border); border-radius:10px;
+    padding:11px 14px; cursor:pointer; color:var(--text); font-size:14.5px; font-weight:700; text-align:left;
+    transition:.15s;
+  }
+  .log-details-toggle:hover{border-color:var(--accent);}
 
   label{display:block; font-size:14px; color:var(--muted); margin-bottom:4px; margin-top:12px;}
   input,select{
@@ -163,6 +174,13 @@
   .history-item .hrow{display:flex; align-items:center; gap:10px; cursor:pointer;}
   .history-item .hthumb{width:64px; height:64px; border-radius:12px; object-fit:cover; flex-shrink:0; border:1px solid var(--border);}
   .history-item .hthumb-empty{display:flex; align-items:center; justify-content:center; background:var(--card2); font-size:26px;}
+  .history-item .hthumb-wrap{position:relative; flex-shrink:0;}
+  .history-item .hthumb-count{
+    position:absolute; bottom:-4px; right:-4px; background:var(--accent); color:#1a1200;
+    font-size:10.5px; font-weight:800; border-radius:10px; padding:1px 5px; border:2px solid var(--card);
+  }
+  .history-item .hphoto-strip{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:10px;}
+  .history-item .hphoto-strip img{width:64px; height:64px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer;}
   .history-item .hinfo{flex:1; min-width:0;}
   .history-item .hname{font-weight:700; font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .history-item .hchevron{color:var(--muted); font-size:13px; flex-shrink:0; transition:transform .2s ease;}
@@ -222,7 +240,16 @@
   .achievement-popup-name{font-weight:800; font-size:16px; margin-top:2px;}
   .empty{color:var(--muted); font-size:15px; text-align:center; padding:24px 0;}
   .flexend{display:flex; justify-content:flex-end; gap:8px; margin-top:14px;}
-  select#exSelect{margin-top:0;}
+  #exSearchInput{margin-top:0;}
+  .ex-suggestions{
+    position:absolute; top:100%; left:0; right:0; margin-top:4px; z-index:50;
+    background:#12141a; border:1px solid var(--border); border-radius:10px;
+    max-height:240px; overflow-y:auto; box-shadow:0 12px 30px rgba(0,0,0,.5);
+  }
+  .ex-suggestions .ex-suggestion{padding:10px 12px; cursor:pointer; font-size:14.5px; border-bottom:1px solid var(--border);}
+  .ex-suggestions .ex-suggestion:last-child{border-bottom:none;}
+  .ex-suggestions .ex-suggestion:hover, .ex-suggestions .ex-suggestion.active{background:var(--card2); color:var(--accent);}
+  .ex-suggestions .ex-suggestion .muscle-tag{color:var(--muted); font-size:12px; margin-left:6px;}
   .tiny{font-size:13px; color:var(--muted);}
   a.tiny{color:var(--accent); text-decoration:none;}
   a.tiny:hover{text-decoration:underline;}
@@ -275,6 +302,7 @@
   .musclepart.lit{stroke:#eef1f6; stroke-width:2.5;}
   .bodyhair{fill:#8a92a3; stroke:#eef1f6; stroke-width:2.5; stroke-linejoin:round;}
   .clavicle{fill:none; stroke:#eef1f6; stroke-width:2; stroke-linecap:round; opacity:.5;}
+  .muscle-divider{fill:none; stroke:#eef1f6; stroke-width:1.4; stroke-linecap:round; opacity:.4; pointer-events:none;}
   .bodyface{fill:#2a2f3b;}
   .musclepart.active-filter{stroke:var(--accent); stroke-width:2.5;}
   .musclepart:hover{stroke:var(--accent); stroke-width:2;}
@@ -313,6 +341,16 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- wavy, off-centre dividing lines instead of straight cuts, so split muscles don't look like glowing boxes -->
+    <clipPath id="clipTop33" clipPathUnits="objectBoundingBox"><path d="M0,0 L1,0 L1,0.36 Q0.62,0.30 0.3,0.34 Q0.1,0.37 0,0.30 Z"/></clipPath>
+    <clipPath id="clipMid33" clipPathUnits="objectBoundingBox"><path d="M0,0.30 Q0.1,0.37 0.3,0.34 Q0.62,0.30 1,0.36 L1,0.70 Q0.65,0.76 0.35,0.72 Q0.15,0.69 0,0.75 Z"/></clipPath>
+    <clipPath id="clipBot33" clipPathUnits="objectBoundingBox"><path d="M0,0.75 Q0.15,0.69 0.35,0.72 Q0.65,0.76 1,0.70 L1,1 L0,1 Z"/></clipPath>
+    <clipPath id="clipTop50" clipPathUnits="objectBoundingBox"><path d="M0,0 L1,0 L1,0.58 Q0.6,0.46 0.32,0.52 Q0.12,0.56 0,0.47 Z"/></clipPath>
+    <clipPath id="clipBot50" clipPathUnits="objectBoundingBox"><path d="M0,0.47 Q0.12,0.56 0.32,0.52 Q0.6,0.46 1,0.58 L1,1 L0,1 Z"/></clipPath>
+  </defs>
+</svg>
 
 <div class="modal-overlay" id="authModal" style="display:flex">
   <div class="modal-box">
@@ -378,7 +416,7 @@
 </div>
 
 <div class="modal-overlay" id="avatarLightbox" style="display:none">
-  <img id="avatarLightboxImg" src="" alt="" style="max-width:88vw; max-height:88vh; border-radius:20px; object-fit:contain; box-shadow:0 20px 60px rgba(0,0,0,.5);">
+  <img id="avatarLightboxImg" src="" alt="" style="width:min(92vw, 520px); height:min(92vh, 520px); border-radius:20px; object-fit:contain; box-shadow:0 20px 60px rgba(0,0,0,.5);">
 </div>
 
 <div class="achievement-popup" id="achievementPopup" style="display:none">
@@ -391,10 +429,10 @@
 
 <div class="modal-overlay" id="presetModal" style="display:none">
   <div class="modal-box" style="max-width:480px">
-    <h2>📋 Presety tréninků</h2>
-    <p class="desc">Uprav si, které cviky patří do kterého presetu. Klikni na ✕ u cviku, ať ho z presetu odebereš, nebo přidej nový cvik dole.</p>
+    <h2>📋 Rutiny</h2>
+    <p class="desc">Uprav si, které cviky patří do které rutiny. Klikni na ✕ u cviku, ať ho z rutiny odebereš, nebo přidej nový cvik dole.</p>
     <div class="flexend" style="justify-content:flex-start; margin-bottom:12px">
-      <button class="btn secondary small" id="newPresetBtn">+ Nový prázdný preset</button>
+      <button class="btn secondary small" id="newPresetBtn">+ Nová prázdná rutina</button>
     </div>
     <div id="presetManageList"></div>
     <div class="flexend">
@@ -526,27 +564,35 @@
             <path class="bodypart-neutral" d="M80,92 Q120,78 160,92 L160,106 Q120,96 80,106 Z"/>
             <path class="clavicle" d="M120,92 Q100,82 82,96"/>
             <path class="clavicle" d="M120,92 Q140,82 158,96"/>
-            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
-            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
-            <path class="musclepart" data-muscle="chest" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/>
-            <path class="musclepart" data-muscle="chest" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="front" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="front" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+            <g clip-path="url(#clipTop33)"><path class="musclepart" data-muscle="chest" data-subpart="upper" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+            <g clip-path="url(#clipMid33)"><path class="musclepart" data-muscle="chest" data-subpart="mid" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+            <g clip-path="url(#clipBot33)"><path class="musclepart" data-muscle="chest" data-subpart="lower" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+            <g clip-path="url(#clipTop33)"><path class="musclepart" data-muscle="chest" data-subpart="upper" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
+            <g clip-path="url(#clipMid33)"><path class="musclepart" data-muscle="chest" data-subpart="mid" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
+            <g clip-path="url(#clipBot33)"><path class="musclepart" data-muscle="chest" data-subpart="lower" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
             <path class="bodypart-neutral" d="M92,158 Q98,186 96,214 L88,212 Q85,184 84,160 Z"/>
             <path class="bodypart-neutral" d="M148,158 Q142,186 144,214 L152,212 Q155,184 156,160 Z"/>
-            <rect class="musclepart" data-muscle="abs" x="98" y="158" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="123" y="158" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="98" y="181" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="123" y="181" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="98" y="204" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="123" y="204" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="upper" x="98" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="upper" x="123" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="mid" x="98" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="mid" x="123" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="lower" x="98" y="204" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="lower" x="123" y="204" width="19" height="18" rx="6"/>
             <path class="bodypart-neutral" d="M90,230 Q120,240 150,230 L152,248 Q120,258 88,248 Z"/>
-            <path class="musclepart" data-muscle="biceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
-            <path class="musclepart" data-muscle="biceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="biceps" data-subpart="upper" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="biceps" data-subpart="lower" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="biceps" data-subpart="upper" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="biceps" data-subpart="lower" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
             <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
             <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
             <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
             <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
-            <path class="musclepart" data-muscle="quads" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/>
-            <path class="musclepart" data-muscle="quads" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="quads" data-subpart="upper" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="quads" data-subpart="lower" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="quads" data-subpart="upper" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="quads" data-subpart="lower" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/></g>
             <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
             <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
             <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
@@ -571,22 +617,29 @@
             <path class="bodyhair" d="M95,32 C95,15 106,6 120,6 C134,6 145,15 145,32 C145,44 140,54 132,60 C138,50 138,30 120,30 C102,30 102,50 108,60 C100,54 95,44 95,32 Z"/>
             <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
             <path class="musclepart" data-muscle="back" data-subpart="traps" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
-            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
-            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="rear" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="rear" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
             <path class="musclepart" data-muscle="back" data-subpart="lats" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
             <path class="musclepart" data-muscle="back" data-subpart="lats" d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
             <rect class="musclepart" data-muscle="back" data-subpart="lower" x="104" y="166" width="32" height="34" rx="12"/>
-            <path class="musclepart" data-muscle="triceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
-            <path class="musclepart" data-muscle="triceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="triceps" data-subpart="upper" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="triceps" data-subpart="lower" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="triceps" data-subpart="upper" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="triceps" data-subpart="lower" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
             <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
             <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
             <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
             <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
-            <path class="musclepart" data-muscle="glutes" d="M120,206 C99,206 87,219 87,236 C87,252 101,264 120,264 C139,264 153,252 153,236 C153,219 141,206 120,206 Z"/>
-            <path class="musclepart" data-muscle="hamstrings" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/>
-            <path class="musclepart" data-muscle="hamstrings" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/>
-            <path class="musclepart" data-muscle="calves" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/>
-            <path class="musclepart" data-muscle="calves" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/>
+            <path class="musclepart" data-muscle="glutes" d="M118,210 C110,204 95,206 89,220 C83,236 87,256 103,263 C112,266 119,260 119,248 C119,236 120,218 118,210 Z"/>
+            <path class="musclepart" data-muscle="glutes" d="M122,210 C130,204 145,206 151,220 C157,236 153,256 137,263 C128,266 121,260 121,248 C121,236 120,218 122,210 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="upper" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="lower" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="upper" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="lower" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/></g>
             <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
             <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
           </svg>
@@ -623,57 +676,84 @@
       <h2>Nový trénink</h2>
       <div class="tiny" id="logStreakBonusLbl" style="margin-bottom:10px"></div>
 
-      <label>Presety <span class="tiny">(klikni a rovnou se ti načtou cviky)</span></label>
-      <div id="presetsRow"></div>
-
-      <div class="row2">
-        <div>
-          <label>Název tréninku</label>
-          <input type="text" id="workoutName" placeholder="např. Push day, Nohy...">
-        </div>
-        <div>
-          <label>Datum</label>
-          <input type="date" id="workoutDate">
-        </div>
+      <div style="display:flex; gap:10px; margin-bottom:20px">
+        <button class="btn secondary" id="startEmptyWorkoutBtn" style="flex:1">➕ Prázdný trénink</button>
+        <button class="btn secondary" id="startNewRoutineBtn" style="flex:1">📋 Nová rutina</button>
       </div>
 
-      <div style="margin-top:12px">
-        <label>Fotka</label>
-        <div id="workoutPhotoPickerRow">
-          <input type="file" id="workoutPhotoInput" accept="image/*">
-        </div>
-        <div id="workoutPhotoPreviewWrap" style="display:none; margin-top:10px; position:relative; width:110px">
-          <img id="workoutPhotoPreview" src="" alt="" style="width:110px; height:110px; object-fit:cover; border-radius:12px; border:1px solid var(--border)">
-          <button type="button" id="removeWorkoutPhotoBtn" class="btn danger small" style="position:absolute; top:-8px; right:-8px; padding:2px 8px; line-height:1">✕</button>
-        </div>
-      </div>
-
-      <div style="margin-top:16px">
-        <div class="row3">
-          <div>
-            <label>Cvik</label>
-            <select id="exSelect"></select>
+      <div id="logFormBody" style="display:none">
+        <div class="log-section" id="routineDetailsSection" style="display:none; margin-top:0; padding-top:0; border-top:none">
+          <label>Název rutiny</label>
+          <input type="text" id="routineName" placeholder="např. Push day, Nohy, Ramena...">
+          <div style="margin-top:12px">
+            <label>Fotka rutiny <span class="tiny">(nepovinné)</span></label>
+            <div>
+              <input type="file" id="routinePhotoInput" accept="image/*">
+            </div>
+            <div id="routinePhotoPreviewWrap" style="display:none; margin-top:10px; position:relative; width:110px">
+              <img id="routinePhotoPreview" src="" alt="" style="width:110px; height:110px; object-fit:cover; border-radius:12px; border:1px solid var(--border)">
+              <button type="button" id="removeRoutinePhotoBtn" class="btn danger small" style="position:absolute; top:-8px; right:-8px; padding:2px 8px; line-height:1">✕</button>
+            </div>
           </div>
-          <div>
-            <label>Jiný cvik</label>
-            <input type="text" id="newExName" placeholder="e.g. Bulgarian Split Squat">
+        </div>
+        <div class="log-section" id="logPresetsSection" style="margin-top:0; padding-top:0; border-top:none">
+          <div class="log-section-title">⚡ Rychlý start</div>
+          <div class="tiny" style="margin-bottom:8px">Klikni na existující rutinu a rovnou se ti načtou její cviky</div>
+          <div id="presetsRow"></div>
+        </div>
+
+        <div class="log-section" id="logDetailsSection">
+          <button type="button" class="log-details-toggle" id="logDetailsToggleBtn">
+            <span id="logDetailsSummary">📅 Dnes</span>
+            <span class="tiny">Upravit název, datum, fotku ▾</span>
+          </button>
+          <div id="logDetailsBody" style="display:none; margin-top:14px">
+            <div class="row2">
+              <div>
+                <label>Název tréninku</label>
+                <input type="text" id="workoutName" placeholder="např. Push day, Nohy...">
+              </div>
+              <div>
+                <label>Datum</label>
+                <input type="date" id="workoutDate">
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <label>Fotky <span class="tiny">(jde přidat víc)</span></label>
+              <div id="workoutPhotoPickerRow">
+                <input type="file" id="workoutPhotoInput" accept="image/*" multiple>
+              </div>
+              <div id="workoutPhotoPreviewWrap" style="display:none; flex-wrap:wrap; gap:10px; margin-top:10px"></div>
+            </div>
           </div>
-          <button class="btn secondary small" id="addExerciseBtn">+ Přidat</button>
         </div>
-        <div class="flexend" style="justify-content:space-between; margin-top:8px">
-          <a id="demoLink" href="#" target="_blank" rel="noopener" class="profile-link">▶ Ukázat, jak se cvik dělá (YouTube)</a>
-          <label class="tiny" id="addToPresetWrap" style="display:none; align-items:center; gap:6px; cursor:pointer">
-            <input type="checkbox" id="addToPresetCheck" style="width:auto"> Přidat i do presetu „<span id="activePresetNameLbl"></span>“
-          </label>
+
+        <div class="log-section">
+          <div class="log-section-title" id="logExercisesTitle">💪 Cviky <span class="tiny badge-count" id="currentExCount"></span></div>
+          <div class="tiny" id="routineHint" style="display:none; margin-bottom:8px">Ukládají se jen názvy cviků — váhu/opakování u rutiny nemusíš vyplňovat.</div>
+          <div style="display:flex; gap:10px; align-items:end">
+            <div style="flex:1; min-width:0; position:relative">
+              <label>Cvik <span class="tiny" id="exCount"></span></label>
+              <input type="text" id="exSearchInput" placeholder="Hledej podle názvu, nebo napiš nový cvik..." autocomplete="off">
+              <div id="exSuggestions" class="ex-suggestions" style="display:none"></div>
+            </div>
+            <button class="btn secondary small" id="addExerciseBtn">+ Přidat</button>
+          </div>
+          <div class="flexend" style="justify-content:space-between; margin-top:8px">
+            <a id="demoLink" href="#" target="_blank" rel="noopener" class="profile-link">▶ Ukázat, jak se cvik dělá (YouTube)</a>
+            <label class="tiny" id="addToPresetWrap" style="display:none; align-items:center; gap:6px; cursor:pointer">
+              <input type="checkbox" id="addToPresetCheck" style="width:auto"> Přidat i do rutiny „<span id="activePresetNameLbl"></span>“
+            </label>
+          </div>
+          <div id="currentExercises" style="margin-top:16px"></div>
         </div>
-      </div>
 
-      <div id="currentExercises" style="margin-top:16px"></div>
-
-      <div class="flexend">
-        <button class="btn secondary" id="saveAsPresetBtn">💾 Uložit jako preset</button>
-        <button class="btn secondary" id="clearWorkoutBtn">Zrušit</button>
-        <button class="btn" id="saveWorkoutBtn">Uložit trénink</button>
+        <div class="flexend">
+          <button class="btn secondary" id="saveAsPresetBtn">💾 Uložit jako rutinu</button>
+          <button class="btn secondary" id="clearWorkoutBtn">Zrušit</button>
+          <button class="btn" id="saveWorkoutBtn">Uložit trénink</button>
+          <button class="btn" id="saveRoutineBtn" style="display:none">Uložit rutinu</button>
+        </div>
       </div>
     </div>
   </section>
@@ -715,31 +795,37 @@
             <path class="clavicle" d="M120,92 Q140,82 158,96"/>
 
             <!-- shoulders -->
-            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
-            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="front" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="front" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
 
             <!-- chest -->
-            <path class="musclepart" data-muscle="chest" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/>
-            <path class="musclepart" data-muscle="chest" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/>
+            <g clip-path="url(#clipTop33)"><path class="musclepart" data-muscle="chest" data-subpart="upper" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+            <g clip-path="url(#clipMid33)"><path class="musclepart" data-muscle="chest" data-subpart="mid" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+            <g clip-path="url(#clipBot33)"><path class="musclepart" data-muscle="chest" data-subpart="lower" d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+            <g clip-path="url(#clipTop33)"><path class="musclepart" data-muscle="chest" data-subpart="upper" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
+            <g clip-path="url(#clipMid33)"><path class="musclepart" data-muscle="chest" data-subpart="mid" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
+            <g clip-path="url(#clipBot33)"><path class="musclepart" data-muscle="chest" data-subpart="lower" d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
 
             <!-- obliques (boční břišní svaly, not tracked separately — part of "abs") -->
             <path class="bodypart-neutral" d="M92,158 Q98,186 96,214 L88,212 Q85,184 84,160 Z"/>
             <path class="bodypart-neutral" d="M148,158 Q142,186 144,214 L152,212 Q155,184 156,160 Z"/>
 
             <!-- abs, six pack grid -->
-            <rect class="musclepart" data-muscle="abs" x="98" y="158" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="123" y="158" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="98" y="181" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="123" y="181" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="98" y="204" width="19" height="18" rx="6"/>
-            <rect class="musclepart" data-muscle="abs" x="123" y="204" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="upper" x="98" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="upper" x="123" y="158" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="mid" x="98" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="mid" x="123" y="181" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="lower" x="98" y="204" width="19" height="18" rx="6"/>
+            <rect class="musclepart" data-muscle="abs" data-subpart="lower" x="123" y="204" width="19" height="18" rx="6"/>
 
             <!-- waist -->
             <path class="bodypart-neutral" d="M90,230 Q120,240 150,230 L152,248 Q120,258 88,248 Z"/>
 
             <!-- biceps -->
-            <path class="musclepart" data-muscle="biceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
-            <path class="musclepart" data-muscle="biceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="biceps" data-subpart="upper" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="biceps" data-subpart="lower" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="biceps" data-subpart="upper" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="biceps" data-subpart="lower" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
 
             <!-- forearms -->
             <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
@@ -750,8 +836,10 @@
             <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
 
             <!-- quads (angled stance: knee sits further out than hip) -->
-            <path class="musclepart" data-muscle="quads" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/>
-            <path class="musclepart" data-muscle="quads" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="quads" data-subpart="upper" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="quads" data-subpart="lower" d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="quads" data-subpart="upper" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="quads" data-subpart="lower" d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/></g>
 
             <!-- calves seen from the front (not tracked here — calves rank is shown on the back view) -->
             <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
@@ -775,8 +863,8 @@
             <path class="musclepart" data-muscle="back" data-subpart="traps" d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
 
             <!-- rear shoulders (rear delts) -->
-            <path class="musclepart" data-muscle="shoulders" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
-            <path class="musclepart" data-muscle="shoulders" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="rear" d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+            <path class="musclepart" data-muscle="shoulders" data-subpart="rear" d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
 
             <!-- lats + lower back -->
             <path class="musclepart" data-muscle="back" data-subpart="lats" d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
@@ -784,8 +872,10 @@
             <rect class="musclepart" data-muscle="back" data-subpart="lower" x="104" y="166" width="32" height="34" rx="12"/>
 
             <!-- triceps -->
-            <path class="musclepart" data-muscle="triceps" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
-            <path class="musclepart" data-muscle="triceps" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="triceps" data-subpart="upper" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="triceps" data-subpart="lower" d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="triceps" data-subpart="upper" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="triceps" data-subpart="lower" d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
 
             <!-- forearms -->
             <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
@@ -796,15 +886,20 @@
             <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
 
             <!-- glutes -->
-            <path class="musclepart" data-muscle="glutes" d="M120,206 C99,206 87,219 87,236 C87,252 101,264 120,264 C139,264 153,252 153,236 C153,219 141,206 120,206 Z"/>
+            <path class="musclepart" data-muscle="glutes" d="M118,210 C110,204 95,206 89,220 C83,236 87,256 103,263 C112,266 119,260 119,248 C119,236 120,218 118,210 Z"/>
+            <path class="musclepart" data-muscle="glutes" d="M122,210 C130,204 145,206 151,220 C157,236 153,256 137,263 C128,266 121,260 121,248 C121,236 120,218 122,210 Z"/>
 
             <!-- hamstrings (angled stance: knee sits further out than hip) -->
-            <path class="musclepart" data-muscle="hamstrings" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/>
-            <path class="musclepart" data-muscle="hamstrings" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="upper" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="lower" d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="upper" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="hamstrings" data-subpart="lower" d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/></g>
 
             <!-- calves (continue the outward angle down to the ankle) -->
-            <path class="musclepart" data-muscle="calves" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/>
-            <path class="musclepart" data-muscle="calves" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/></g>
+            <g clip-path="url(#clipTop50)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/></g>
+            <g clip-path="url(#clipBot50)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/></g>
 
             <!-- feet -->
             <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
@@ -978,9 +1073,10 @@ const MUSCLE_GROUPS = [
   {key:'calves', label:'Lýtka'},
 ];
 const DEFAULT_EXERCISE_MUSCLE = {
-  // Prsa
+  // Chest
   'Bench Press':'chest',
   'Incline Bench Press':'chest',
+  'Decline Bench Press':'chest',
   'Dumbbell Bench Press':'chest',
   'Incline Dumbbell Bench Press':'chest',
   'Push-ups':'chest',
@@ -989,7 +1085,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Cable Crossover':'chest',
   'Pec Deck Fly':'chest',
   'Chest Press Machine':'chest',
-  // Záda
+  'Landmine Press':'chest',
+  'Svend Press':'chest',
+  // Back
   'Deadlift':'back',
   'Sumo Deadlift':'back',
   'Bent-Over Row':'back',
@@ -1001,14 +1099,19 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'T-Bar Row':'back',
   'Hyperextensions':'back',
   'Shrugs':'back',
-  // Ramena
+  'Face Pull':'back',
+  'Straight-Arm Pulldown':'back',
+  'Inverted Row':'back',
+  // Shoulders
   'Overhead Press':'shoulders',
   'Dumbbell Shoulder Press':'shoulders',
   'Arnold Press':'shoulders',
   'Lateral Raise':'shoulders',
+  'Cable Lateral Raise':'shoulders',
   'Rear Delt Fly':'shoulders',
   'Upright Row':'shoulders',
   'Shoulder Press Machine':'shoulders',
+  'Front Raise':'shoulders',
   // Biceps
   'Bicep Curl':'biceps',
   'EZ-Bar Curl':'biceps',
@@ -1016,6 +1119,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Cable Curl':'biceps',
   'Concentration Curl':'biceps',
   'Preacher Curl':'biceps',
+  'Cross-Body Hammer Curl':'biceps',
+  'Cable Hammer Curl':'biceps',
+  '21s Bicep Curl':'biceps',
   // Triceps
   'Tricep Dips':'triceps',
   'Skull Crushers':'triceps',
@@ -1023,14 +1129,21 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Overhead Tricep Extension':'triceps',
   'Tricep Kickback':'triceps',
   'Close-Grip Bench Press':'triceps',
-  // Břicho
+  'Diamond Push-ups':'triceps',
+  'Cable Overhead Extension':'triceps',
+  'JM Press':'triceps',
+  // Abs
   'Crunches':'abs',
   'Plank':'abs',
   'Leg Raises':'abs',
   'Russian Twist':'abs',
   'Bicycle Crunch':'abs',
   'Cable Crunch':'abs',
-  // Stehna přední
+  'Hanging Leg Raise':'abs',
+  'Sit-ups':'abs',
+  'Ab Wheel Rollout':'abs',
+  'Mountain Climbers':'abs',
+  // Quads
   'Squat':'quads',
   'Front Squat':'quads',
   'Hack Squat':'quads',
@@ -1038,43 +1151,86 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Bulgarian Split Squat':'quads',
   'Leg Press':'quads',
   'Leg Extension':'quads',
-  // Stehna zadní
+  'Goblet Squat':'quads',
+  'Sissy Squat':'quads',
+  'Step-ups':'quads',
+  // Hamstrings
   'Romanian Deadlift':'hamstrings',
   'Single-Leg Deadlift':'hamstrings',
   'Leg Curl':'hamstrings',
   'Good Morning':'hamstrings',
-  // Hýždě
+  'Nordic Curl':'hamstrings',
+  'Stiff-Leg Deadlift':'hamstrings',
+  'Cable Pull-Through':'hamstrings',
+  // Glutes
   'Hip Thrust':'glutes',
   'Glute Bridge':'glutes',
   'Sumo Squat':'glutes',
   'Cable Kickback':'glutes',
   'Donkey Kick':'glutes',
-  // Lýtka
+  'Frog Pump':'glutes',
+  'Curtsy Lunge':'glutes',
+  // Calves
   'Standing Calf Raise':'calves',
   'Seated Calf Raise':'calves',
   'Donkey Calf Raise':'calves',
   'Leg Press Calf Raise':'calves',
+  'Single-Leg Calf Raise':'calves',
 };
 const DEFAULT_EXERCISES = Object.keys(DEFAULT_EXERCISE_MUSCLE);
 
-// "back" on the body figure is actually 3 separate visual areas (traps / lats / lower back).
-// Instead of lighting up the whole back for any back exercise, only light the part that
-// exercise actually trains. Exercises not listed here (e.g. custom ones) light the whole area.
-const BACK_SUBPART_BY_EXERCISE = {
-  'Deadlift':'lower',
-  'Sumo Deadlift':'lower',
-  'Hyperextensions':'lower',
-  'Bent-Over Row':'lats',
-  'Pull-ups':'lats',
-  'Chin-ups':'lats',
-  'One-Arm Dumbbell Row':'lats',
-  'Seated Cable Row':'lats',
-  'Lat Pulldown':'lats',
-  'T-Bar Row':'lats',
-  'Shrugs':'traps',
+// Every muscle group on the body figure is actually made of several visually distinct
+// areas (e.g. back = traps/lats/lower back, chest = upper/mid/lower, shoulders =
+// front/rear delt...). Instead of lighting up the whole group for any exercise in it,
+// only light the specific part that exercise actually trains. Exercises not listed for
+// a given muscle (e.g. custom ones, or ones with no clear sub-area) light the whole group.
+const MUSCLE_SUBPART_BY_EXERCISE = {
+  back: {
+    'Deadlift':'lower', 'Sumo Deadlift':'lower', 'Hyperextensions':'lower',
+    'Bent-Over Row':'lats', 'Pull-ups':'lats', 'Chin-ups':'lats', 'One-Arm Dumbbell Row':'lats',
+    'Seated Cable Row':'lats', 'Lat Pulldown':'lats', 'T-Bar Row':'lats',
+    'Shrugs':'traps',
+  },
+  chest: {
+    'Incline Bench Press':'upper', 'Incline Dumbbell Bench Press':'upper',
+    'Decline Bench Press':'lower', 'Dips':'lower',
+  },
+  shoulders: {
+    'Overhead Press':'front', 'Dumbbell Shoulder Press':'front', 'Arnold Press':'front',
+    'Front Raise':'front', 'Shoulder Press Machine':'front', 'Lateral Raise':'front',
+    'Cable Lateral Raise':'front', 'Upright Row':'front',
+    'Rear Delt Fly':'rear',
+  },
+  biceps: {
+    'Hammer Curl':'lower', 'Cross-Body Hammer Curl':'lower', 'Cable Hammer Curl':'lower',
+    'Concentration Curl':'upper', 'Preacher Curl':'upper',
+  },
+  triceps: {
+    'Overhead Tricep Extension':'upper', 'Skull Crushers':'upper', 'Cable Overhead Extension':'upper',
+    'Tricep Pushdown':'lower', 'Tricep Kickback':'lower', 'Close-Grip Bench Press':'lower',
+    'Diamond Push-ups':'lower', 'JM Press':'lower',
+  },
+  abs: {
+    'Crunches':'upper', 'Sit-ups':'upper', 'Cable Crunch':'upper',
+    'Leg Raises':'lower', 'Hanging Leg Raise':'lower', 'Mountain Climbers':'lower',
+  },
+  quads: {
+    'Leg Press':'upper', 'Hack Squat':'upper',
+    'Front Squat':'lower', 'Goblet Squat':'lower', 'Leg Extension':'lower', 'Sissy Squat':'lower',
+  },
+  hamstrings: {
+    'Romanian Deadlift':'upper', 'Good Morning':'upper', 'Stiff-Leg Deadlift':'upper', 'Cable Pull-Through':'upper',
+    'Leg Curl':'lower', 'Nordic Curl':'lower', 'Single-Leg Deadlift':'lower',
+  },
+  calves: {
+    'Seated Calf Raise':'lower',
+    'Standing Calf Raise':'upper', 'Donkey Calf Raise':'upper', 'Leg Press Calf Raise':'upper', 'Single-Leg Calf Raise':'upper',
+  },
 };
-function backSubpart(exerciseName){
-  return BACK_SUBPART_BY_EXERCISE[exerciseName] || 'all';
+function subpartFor(muscleKey, exerciseName){
+  const map = MUSCLE_SUBPART_BY_EXERCISE[muscleKey];
+  if(!map || !exerciseName) return 'all';
+  return map[exerciseName] || 'all';
 }
 
 const ACHIEVEMENT_DEFS = [
@@ -1164,7 +1320,9 @@ function scheduleCloudSync(){
 let state = loadState();
 let currentWorkoutExercises = []; // [{name, sets:[{weight,reps}]}]
 let activePresetId = null;
-let currentWorkoutPhoto = null;
+let currentWorkoutPhotos = [];
+let logMode = null; // null | 'workout' | 'routine'
+let currentRoutinePhoto = null;
 
 // ---------- Core formulas ----------
 function ageFactor(age){
@@ -1299,10 +1457,10 @@ function renderBody(){
   MUSCLE_GROUPS.forEach(m => {
     const {idx, exercise} = muscleBestRank(m.key);
     const tier = idx >= 0 ? RANK_TIERS[idx] : null;
-    // "back" has several visually distinct sub-parts (traps/lats/lower back) — only light
-    // the one the winning exercise actually trains, not the whole back. Every other muscle
-    // group has no sub-parts, so activePart stays 'all' and behaves as before.
-    const activePart = (m.key === 'back' && exercise) ? backSubpart(exercise) : 'all';
+    // Every muscle group has several visually distinct sub-parts — only light the one the
+    // winning exercise actually trains, not the whole group. Exercises with no known
+    // sub-part (custom ones etc.) fall back to lighting every part of the group.
+    const activePart = subpartFor(m.key, exercise);
     const els = document.querySelectorAll(`[data-muscle="${m.key}"]`);
     els.forEach(el => {
       const partMatch = activePart === 'all' || el.dataset.subpart === activePart;
@@ -1311,9 +1469,15 @@ function renderBody(){
       el.classList.toggle('active-filter', muscleFilter === m.key);
       if(lit){
         el.style.fill = `var(--${tier.cls})`;
-        el.style.filter = `drop-shadow(0 0 4px var(--${tier.cls})) drop-shadow(0 0 10px var(--${tier.cls})) drop-shadow(0 0 20px var(--${tier.cls}))`;
+        el.style.stroke = `var(--${tier.cls})`;
+        el.style.strokeWidth = '2';
+        // small, tight blur — these are small clipped sub-areas now, a big blur would
+        // wash out past their own edges and look like it's lighting up neighbouring parts
+        el.style.filter = `drop-shadow(0 0 3px var(--${tier.cls})) drop-shadow(0 0 6px var(--${tier.cls})) drop-shadow(0 0 10px var(--${tier.cls}))`;
       } else {
         el.style.fill = '';
+        el.style.stroke = '';
+        el.style.strokeWidth = '';
         el.style.filter = '';
       }
       const existingTitle = el.querySelector('title');
@@ -1329,6 +1493,49 @@ function renderBody(){
   const legend = document.getElementById('bodyLegend');
   legend.innerHTML = RANK_TIERS.map(t => `<span class="pill ${t.cls}">${t.icon} ${t.name}</span>`).join('') +
     '<span class="pill unranked">⬤ Netrénováno</span>';
+
+  addMuscleDividers(document);
+}
+
+// ---------- Visible dividing lines between split muscle sub-parts ----------
+// The clip-path cuts are invisible at rest (no stroke runs along an internal clip
+// boundary, only along the shape's own outline) — draw a thin static line along each
+// cut so the sub-division reads clearly even before anything is ranked/lit.
+const DIVIDER_CURVES = {
+  2: ['M1,0.58 Q0.6,0.46 0.32,0.52 Q0.12,0.56 0,0.47'],
+  3: [
+    'M1,0.36 Q0.62,0.30 0.3,0.34 Q0.1,0.37 0,0.30',
+    'M1,0.70 Q0.65,0.76 0.35,0.72 Q0.15,0.69 0,0.75',
+  ],
+};
+function addMuscleDividers(root){
+  root.querySelectorAll('.muscle-divider').forEach(el => el.remove());
+  const svgs = [...root.querySelectorAll('svg')];
+  const seen = new Map(); // "svgIndex|muscle|d" -> array of clip-path <g> wrappers sharing it
+  root.querySelectorAll('g[clip-path] > .musclepart').forEach(p => {
+    const svg = p.closest('svg');
+    const svgIdx = svgs.indexOf(svg);
+    const key = svgIdx + '|' + p.dataset.muscle + '|' + p.getAttribute('d');
+    if(!seen.has(key)) seen.set(key, []);
+    seen.get(key).push(p.parentElement);
+  });
+  seen.forEach((groups, key) => {
+    const ways = groups.length; // 2 or 3
+    const curves = DIVIDER_CURVES[ways];
+    if(!curves) return;
+    const svg = groups[0].closest('svg');
+    if(!svg) return;
+    let bbox;
+    try{ bbox = groups[0].querySelector('.musclepart').getBBox(); }catch(e){ return; }
+    curves.forEach(curveD => {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      line.setAttribute('class', 'muscle-divider');
+      line.setAttribute('d', curveD);
+      line.setAttribute('vector-effect', 'non-scaling-stroke');
+      line.setAttribute('transform', `translate(${bbox.x},${bbox.y}) scale(${bbox.width},${bbox.height})`);
+      groups[groups.length - 1].after(line);
+    });
+  });
 }
 
 function renderHeader(){
@@ -1483,13 +1690,40 @@ function buildExerciseOptionsHTML(placeholderText){
   }
   return {optsHtml, count: allNames.size};
 }
+function allExerciseNames(){
+  return [...new Set([...DEFAULT_EXERCISES, ...Object.keys(state.exercises), ...Object.keys(state.exerciseMuscles)])].sort();
+}
+
+// ---------- Custom exercise search (native <datalist> isn't supported on iOS Safari) ----------
+function renderExSuggestions(){
+  const input = document.getElementById('exSearchInput');
+  const box = document.getElementById('exSuggestions');
+  const q = input.value.trim().toLowerCase();
+  if(!q){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  const matches = allExerciseNames().filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+  if(matches.length === 0){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.innerHTML = matches.map(n => {
+    const group = MUSCLE_GROUPS.find(m => m.key === state.exerciseMuscles[n]);
+    return `<div class="ex-suggestion" data-exsuggest="${escapeHtml(n)}">${escapeHtml(n)}${group ? `<span class="muscle-tag">${group.label}</span>` : ''}</div>`;
+  }).join('');
+  box.style.display = 'block';
+}
+document.addEventListener('click', (e) => {
+  const item = e.target.closest('[data-exsuggest]');
+  if(item){
+    document.getElementById('exSearchInput').value = item.dataset.exsuggest;
+    document.getElementById('exSuggestions').style.display = 'none';
+    updateDemoLink();
+    return;
+  }
+  if(!e.target.closest('#exSearchInput') && !e.target.closest('#exSuggestions')){
+    document.getElementById('exSuggestions').style.display = 'none';
+  }
+});
 
 function renderLogTab(){
-  const sel = document.getElementById('exSelect');
-  const prevValue = sel.value;
-  const {optsHtml} = buildExerciseOptionsHTML('— vyber cvik ({n} celkem) —');
-  sel.innerHTML = optsHtml;
-  if(prevValue && [...sel.options].some(o => o.value === prevValue)) sel.value = prevValue;
+  const count = allExerciseNames().length;
+  document.getElementById('exCount').textContent = `(${count} cviků v nabídce)`;
   updateDemoLink();
 
   if(!document.getElementById('workoutDate').value){
@@ -1514,7 +1748,28 @@ function renderLogTab(){
   }
 
   renderCurrentExercises();
+  document.getElementById('currentExCount').textContent = currentWorkoutExercises.length ? `(${currentWorkoutExercises.length})` : '';
+  updateLogDetailsSummary();
 }
+
+function updateLogDetailsSummary(){
+  const name = document.getElementById('workoutName').value.trim();
+  const date = document.getElementById('workoutDate').value || fmtDate(new Date());
+  const dateLabel = date === fmtDate(new Date()) ? 'Dnes' : date;
+  const parts = [`📅 ${dateLabel}`];
+  if(name) parts.push(`„${escapeHtml(name)}“`);
+  if(currentWorkoutPhotos.length) parts.push(currentWorkoutPhotos.length === 1 ? '📷 fotka' : `📷 ${currentWorkoutPhotos.length} fotek`);
+  document.getElementById('logDetailsSummary').innerHTML = parts.join(' · ');
+}
+document.getElementById('logDetailsToggleBtn').addEventListener('click', () => {
+  const body = document.getElementById('logDetailsBody');
+  const btn = document.getElementById('logDetailsToggleBtn');
+  const show = body.style.display !== 'block';
+  body.style.display = show ? 'block' : 'none';
+  btn.classList.toggle('open', show);
+});
+document.getElementById('workoutName').addEventListener('input', updateLogDetailsSummary);
+document.getElementById('workoutDate').addEventListener('change', updateLogDetailsSummary);
 
 function presetById(id){
   return (state.presets || []).find(p => p.id === id);
@@ -1526,7 +1781,7 @@ function renderPresetsRow(){
   const chips = presets.map(p => `<button type="button" class="btn secondary small" data-applypreset="${p.id}">⚡ ${escapeHtml(p.name)} <span class="tiny">(${p.exercises.length})</span></button>`).join('');
   wrap.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center">
     ${chips}
-    <button type="button" class="btn secondary small" id="managePresetsBtn">⚙ Spravovat presety</button>
+    <button type="button" class="btn secondary small" id="managePresetsBtn">⚙ Spravovat rutiny</button>
   </div>`;
   document.getElementById('managePresetsBtn').addEventListener('click', openPresetModal);
 }
@@ -1541,7 +1796,7 @@ function applyPreset(id){
   });
   activePresetId = id;
   renderLogTab();
-  showToast(`Preset „${preset.name}“ načten (${preset.exercises.length} cviků)`);
+  showToast(`Rutina „${preset.name}“ načtena (${preset.exercises.length} cviků)`);
 }
 
 function openPresetModal(){
@@ -1603,15 +1858,15 @@ function renderPresetManageList(){
   const wrap = document.getElementById('presetManageList');
   const presets = state.presets || [];
   if(presets.length === 0){
-    wrap.innerHTML = '<div class="empty">Zatím nemáš žádný preset. Přidej cviky do tréninku a ulož je tlačítkem „💾 Uložit jako preset“, nebo si tu založ prázdný.</div>';
+    wrap.innerHTML = '<div class="empty">Zatím nemáš žádnou rutinu. Přidej cviky do tréninku a ulož je tlačítkem „💾 Uložit jako rutinu“, nebo si tu založ prázdnou.</div>';
     return;
   }
   const {optsHtml} = buildExerciseOptionsHTML('— přidat cvik do presetu —');
   wrap.innerHTML = presets.map(p => `
     <div class="exercise-block">
       <div class="ehead">
-        <b>${escapeHtml(p.name)}</b>
-        <button class="btn danger small" data-delpreset="${p.id}">Smazat preset</button>
+        <b>${p.photo ? `<img src="${p.photo}" alt="" class="avatar-clickable" onclick="openAvatarLightbox(this.src)" style="width:32px;height:32px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-right:8px">` : ''}${escapeHtml(p.name)}</b>
+        <button class="btn danger small" data-delpreset="${p.id}">Smazat rutinu</button>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin:10px 0">
         ${p.exercises.length ? p.exercises.map((n, idx) => `<span class="pill unranked">${escapeHtml(n)} <button data-rmpresetex="${p.id}" data-idx="${idx}" style="background:none; border:none; color:inherit; cursor:pointer; font-weight:800; margin-left:2px">✕</button></span>`).join('') : '<span class="tiny">Žádné cviky</span>'}
@@ -1640,9 +1895,7 @@ function renderPRForm(){
 }
 
 function updateDemoLink(){
-  const newName = document.getElementById('newExName').value.trim();
-  const selected = document.getElementById('exSelect').value;
-  const name = newName || selected;
+  const name = document.getElementById('exSearchInput').value.trim();
   const link = document.getElementById('demoLink');
   if(name){
     link.href = exerciseDemoUrl(name);
@@ -1726,9 +1979,15 @@ function renderExercises(){
 function historyItemHTML(w, idx, prefix){
   const detailsId = `${prefix || 'h'}Details_${idx}`;
   const xp = w.xpEarned != null ? w.xpEarned : xpForWorkout(w);
+  const photos = (w.photos && w.photos.length) ? w.photos : (w.photo ? [w.photo] : []);
   return `<div class="history-item">
     <div class="hrow" data-togglehist="${detailsId}">
-      ${w.photo ? `<img class="hthumb avatar-clickable" src="${w.photo}" alt="" onclick="event.stopPropagation(); openAvatarLightbox(this.src);">` : '<div class="hthumb hthumb-empty">🏋️</div>'}
+      ${photos.length ? `
+        <div class="hthumb-wrap">
+          <img class="hthumb avatar-clickable" src="${photos[0]}" alt="" onclick="event.stopPropagation(); openAvatarLightbox(this.src);">
+          ${photos.length > 1 ? `<span class="hthumb-count">+${photos.length - 1}</span>` : ''}
+        </div>
+      ` : '<div class="hthumb hthumb-empty">🏋️</div>'}
       <div class="hinfo">
         <div class="hname">${w.name ? escapeHtml(w.name) : w.date}</div>
         ${w.name ? `<div class="tiny">${w.date}</div>` : ''}
@@ -1737,7 +1996,7 @@ function historyItemHTML(w, idx, prefix){
     </div>
     <div class="hdetails" id="${detailsId}">
       <span class="xp-tag">+${xp} XP</span>
-      ${w.photo ? `<img class="hphoto-full avatar-clickable" src="${w.photo}" alt="" onclick="openAvatarLightbox(this.src)">` : ''}
+      ${photos.length > 1 ? `<div class="hphoto-strip">${photos.map(p => `<img src="${p}" alt="" class="avatar-clickable" onclick="openAvatarLightbox(this.src)">`).join('')}</div>` : ''}
       ${w.exercises.map(e => `<div class="hex">${escapeHtml(e.name)}: ${e.sets.map(s => `${s.weight}kg×${s.reps}`).join(', ')}</div>`).join('')}
       ${prefix === 'hist' ? `<button class="btn danger small" data-delworkout="${state.workouts.indexOf(w)}" style="margin-top:10px">🗑 Smazat trénink</button>` : ''}
     </div>
@@ -1853,13 +2112,14 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
   });
 });
 
-document.getElementById('newExName').addEventListener('input', updateDemoLink);
-document.getElementById('exSelect').addEventListener('change', updateDemoLink);
+document.getElementById('exSearchInput').addEventListener('input', () => {
+  updateDemoLink();
+  renderExSuggestions();
+});
+document.getElementById('exSearchInput').addEventListener('focus', renderExSuggestions);
 
 document.getElementById('addExerciseBtn').addEventListener('click', () => {
-  const newName = document.getElementById('newExName').value.trim();
-  const selected = document.getElementById('exSelect').value;
-  const name = newName || selected;
+  const name = document.getElementById('exSearchInput').value.trim();
   if(!name) return;
   currentWorkoutExercises.push({name, sets:[{weight:'', reps:''}]});
   const addToPresetCheck = document.getElementById('addToPresetCheck');
@@ -1868,11 +2128,11 @@ document.getElementById('addExerciseBtn').addEventListener('click', () => {
     if(preset && !preset.exercises.includes(name)){
       preset.exercises.push(name);
       saveState();
-      showToast(`„${name}“ přidán i do presetu „${preset.name}“`);
+      showToast(`„${name}“ přidán i do rutiny „${preset.name}“`);
     }
   }
-  document.getElementById('newExName').value = '';
-  document.getElementById('exSelect').value = '';
+  document.getElementById('exSearchInput').value = '';
+  document.getElementById('exSuggestions').style.display = 'none';
   renderLogTab();
   renderCurrentExercises();
 });
@@ -1895,29 +2155,111 @@ document.getElementById('saveAsPresetBtn').addEventListener('click', async () =>
     activePresetId = existing.id;
     saveState();
     renderLogTab();
-    showToast(`Preset „${existing.name}“ aktualizován`);
+    showToast(`Rutina „${existing.name}“ aktualizována`);
   } else {
     const preset = {id: 'p_' + Date.now().toString(36), name: trimmed, exercises: [...names]};
     state.presets.push(preset);
     activePresetId = preset.id;
     saveState();
     renderLogTab();
-    showToast(`Preset „${trimmed}“ uložen`);
+    showToast(`Rutina „${trimmed}“ uložena`);
   }
 });
 
-document.getElementById('newPresetBtn').addEventListener('click', async () => {
-  const input = await showTextPrompt('Název nového presetu', 'Např. Nohy, Push day, Ramena...', '');
-  if(!input) return;
+async function createNewPreset(promptTitle){
+  const input = await showTextPrompt(promptTitle || 'Název nové rutiny', 'Např. Nohy, Push day, Ramena...', '');
+  if(!input) return null;
   const trimmed = input.trim();
-  if(!trimmed) return;
+  if(!trimmed) return null;
   if(!state.presets) state.presets = [];
-  state.presets.push({id: 'p_' + Date.now().toString(36), name: trimmed, exercises: []});
+  const preset = {id: 'p_' + Date.now().toString(36), name: trimmed, exercises: []};
+  state.presets.push(preset);
   saveState();
+  return preset;
+}
+document.getElementById('newPresetBtn').addEventListener('click', async () => {
+  const preset = await createNewPreset();
+  if(!preset) return;
   renderPresetManageList();
   renderPresetsRow();
 });
 document.getElementById('closePresetModalBtn').addEventListener('click', closePresetModal);
+
+function showLogForm(mode){
+  logMode = mode;
+  document.getElementById('logFormBody').style.display = 'block';
+  const isRoutine = mode === 'routine';
+  document.getElementById('routineDetailsSection').style.display = isRoutine ? 'block' : 'none';
+  document.getElementById('logPresetsSection').style.display = isRoutine ? 'none' : '';
+  document.getElementById('logDetailsSection').style.display = isRoutine ? 'none' : '';
+  document.getElementById('saveAsPresetBtn').style.display = isRoutine ? 'none' : '';
+  document.getElementById('saveWorkoutBtn').style.display = isRoutine ? 'none' : '';
+  document.getElementById('saveRoutineBtn').style.display = isRoutine ? '' : 'none';
+  document.getElementById('addToPresetWrap').style.display = isRoutine ? 'none' : (activePresetId ? 'flex' : 'none');
+  document.getElementById('logExercisesTitle').innerHTML = (isRoutine ? '💪 Cviky v rutině' : '💪 Cviky') + ' <span class="tiny badge-count" id="currentExCount"></span>';
+  document.getElementById('routineHint').style.display = isRoutine ? 'block' : 'none';
+}
+function hideLogForm(){
+  logMode = null;
+  document.getElementById('logFormBody').style.display = 'none';
+}
+async function resetAndCancelLogging(){
+  if(currentWorkoutExercises.length && !await showConfirm('Zrušit rozepsaný trénink/rutinu?')) return false;
+  currentWorkoutExercises = [];
+  activePresetId = null;
+  currentWorkoutPhotos = [];
+  currentRoutinePhoto = null;
+  document.getElementById('workoutName').value = '';
+  document.getElementById('workoutPhotoInput').value = '';
+  document.getElementById('routineName').value = '';
+  document.getElementById('routinePhotoInput').value = '';
+  updateRoutinePhotoPreview();
+  hideLogForm();
+  return true;
+}
+
+document.getElementById('startEmptyWorkoutBtn').addEventListener('click', async () => {
+  if(!await resetAndCancelLogging()) return;
+  showLogForm('workout');
+  renderLogTab();
+  document.getElementById('exSearchInput').focus();
+});
+document.getElementById('startNewRoutineBtn').addEventListener('click', async () => {
+  if(!await resetAndCancelLogging()) return;
+  showLogForm('routine');
+  renderLogTab();
+  document.getElementById('exSearchInput').focus();
+});
+document.getElementById('saveRoutineBtn').addEventListener('click', async () => {
+  if(currentWorkoutExercises.length === 0){
+    showToast('Nejdřív přidej alespoň jeden cvik.', 'warn');
+    return;
+  }
+  const trimmed = document.getElementById('routineName').value.trim();
+  if(!trimmed){
+    showToast('Zadej prosím název rutiny.', 'warn');
+    return;
+  }
+  if(!state.presets) state.presets = [];
+  const names = currentWorkoutExercises.map(e => e.name);
+  const existing = state.presets.find(p => p.name.toLowerCase() === trimmed.toLowerCase());
+  if(existing){
+    names.forEach(n => { if(!existing.exercises.includes(n)) existing.exercises.push(n); });
+    if(currentRoutinePhoto) existing.photo = currentRoutinePhoto;
+  } else {
+    state.presets.push({id: 'p_' + Date.now().toString(36), name: trimmed, exercises: [...names], photo: currentRoutinePhoto || null});
+  }
+  saveState();
+  currentWorkoutExercises = [];
+  activePresetId = null;
+  currentRoutinePhoto = null;
+  document.getElementById('routineName').value = '';
+  document.getElementById('routinePhotoInput').value = '';
+  updateRoutinePhotoPreview();
+  hideLogForm();
+  renderLogTab();
+  showToast(`Rutina „${trimmed}“ uložena`);
+});
 
 document.addEventListener('click', async (e) => {
   const apply = e.target.closest('[data-applypreset]');
@@ -1926,7 +2268,7 @@ document.addEventListener('click', async (e) => {
   const del = e.target.closest('[data-delpreset]');
   if(del){
     const preset = presetById(del.dataset.delpreset);
-    if(preset && await showConfirm(`Smazat preset „${preset.name}“?`)){
+    if(preset && await showConfirm(`Smazat rutinu „${preset.name}“?`)){
       state.presets = (state.presets || []).filter(p => p.id !== preset.id);
       if(activePresetId === preset.id) activePresetId = null;
       saveState();
@@ -2030,12 +2372,7 @@ function updateSet(ei, si, field, value){
 }
 
 document.getElementById('clearWorkoutBtn').addEventListener('click', async () => {
-  if(currentWorkoutExercises.length && !await showConfirm('Zrušit rozepsaný trénink?')) return;
-  currentWorkoutExercises = [];
-  activePresetId = null;
-  currentWorkoutPhoto = null;
-  document.getElementById('workoutPhotoInput').value = '';
-  renderLogTab();
+  await resetAndCancelLogging();
 });
 
 document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
@@ -2048,7 +2385,7 @@ document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
     showToast('Přidej alespoň jeden cvik s vyplněnou váhou a počtem opakování.', 'warn');
     return;
   }
-  const workout = {date, name, exercises: cleanExercises, photo: currentWorkoutPhoto || null};
+  const workout = {date, name, exercises: cleanExercises, photos: [...currentWorkoutPhotos]};
   state.workouts.push(workout);
 
   const streak = computeStreak(state);
@@ -2063,9 +2400,10 @@ document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
 
   currentWorkoutExercises = [];
   activePresetId = null;
-  currentWorkoutPhoto = null;
+  currentWorkoutPhotos = [];
   document.getElementById('workoutName').value = '';
   document.getElementById('workoutPhotoInput').value = '';
+  hideLogForm();
   const newlyUnlocked = checkAchievements();
   saveState();
   renderAll();
@@ -2416,15 +2754,60 @@ function resizeImageFile(file, maxDim, quality, callback){
 }
 function updateWorkoutPhotoPreview(){
   const wrap = document.getElementById('workoutPhotoPreviewWrap');
-  const img = document.getElementById('workoutPhotoPreview');
-  if(currentWorkoutPhoto){
-    img.src = currentWorkoutPhoto;
+  if(currentWorkoutPhotos.length){
+    wrap.style.display = 'flex';
+    wrap.innerHTML = currentWorkoutPhotos.map((src, i) => `
+      <div style="position:relative; width:90px; height:90px">
+        <img src="${src}" alt="" class="avatar-clickable" onclick="openAvatarLightbox(this.src)" style="width:90px; height:90px; object-fit:cover; border-radius:12px; border:1px solid var(--border)">
+        <button type="button" data-rmworkoutphoto="${i}" class="btn danger small" style="position:absolute; top:-8px; right:-8px; padding:2px 8px; line-height:1">✕</button>
+      </div>
+    `).join('');
+  } else {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+  }
+  if(typeof updateLogDetailsSummary === 'function') updateLogDetailsSummary();
+}
+document.getElementById('workoutPhotoPreviewWrap').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-rmworkoutphoto]');
+  if(!btn) return;
+  currentWorkoutPhotos.splice(parseInt(btn.dataset.rmworkoutphoto, 10), 1);
+  updateWorkoutPhotoPreview();
+});
+document.getElementById('workoutPhotoInput').addEventListener('change', (e) => {
+  const files = [...e.target.files];
+  if(!files.length) return;
+  const tooBig = files.find(f => f.size > 8 * 1024 * 1024);
+  if(tooBig){
+    showToast('Obrázek je moc velký, zkus prosím menší (max 8 MB).', 'warn');
+    e.target.value = '';
+    return;
+  }
+  let remaining = files.length;
+  files.forEach(file => {
+    resizeImageFile(file, 800, 0.75, (dataUrl) => {
+      currentWorkoutPhotos.push(dataUrl);
+      remaining--;
+      if(remaining === 0){
+        e.target.value = '';
+        updateWorkoutPhotoPreview();
+      }
+    });
+  });
+});
+
+// ---------- Routine cover photo ----------
+function updateRoutinePhotoPreview(){
+  const wrap = document.getElementById('routinePhotoPreviewWrap');
+  const img = document.getElementById('routinePhotoPreview');
+  if(currentRoutinePhoto){
+    img.src = currentRoutinePhoto;
     wrap.style.display = 'block';
   } else {
     wrap.style.display = 'none';
   }
 }
-document.getElementById('workoutPhotoInput').addEventListener('change', (e) => {
+document.getElementById('routinePhotoInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
   if(file.size > 8 * 1024 * 1024){
@@ -2432,20 +2815,20 @@ document.getElementById('workoutPhotoInput').addEventListener('change', (e) => {
     e.target.value = '';
     return;
   }
-  resizeImageFile(file, 800, 0.75, (dataUrl) => {
-    currentWorkoutPhoto = dataUrl;
-    updateWorkoutPhotoPreview();
+  resizeImageFile(file, 500, 0.75, (dataUrl) => {
+    currentRoutinePhoto = dataUrl;
+    updateRoutinePhotoPreview();
   });
 });
-document.getElementById('removeWorkoutPhotoBtn').addEventListener('click', () => {
-  currentWorkoutPhoto = null;
-  document.getElementById('workoutPhotoInput').value = '';
-  updateWorkoutPhotoPreview();
+document.getElementById('removeRoutinePhotoBtn').addEventListener('click', () => {
+  currentRoutinePhoto = null;
+  document.getElementById('routinePhotoInput').value = '';
+  updateRoutinePhotoPreview();
 });
 
 // ---------- Avatar crop (drag to pan, slider to zoom — like Instagram's avatar picker) ----------
 const CROP_SIZE = 260;
-const AVATAR_OUT = 160;
+const AVATAR_OUT = 360; // bigger than the tiny 64px display size so the lightbox zoom isn't blurry
 let cropState = {img:null, baseScale:1, scale:1, tx:0, ty:0, dragging:false, startX:0, startY:0, startTx:0, startTy:0};
 
 function openCropModal(img){
@@ -2712,10 +3095,10 @@ function friendMuscleBest(data, muscleKey){
 function fStyle(data, muscleKey, subpart){
   const {idx, exercise} = friendMuscleBest(data, muscleKey);
   if(idx < 0) return '';
-  if(subpart && muscleKey === 'back' && backSubpart(exercise) !== subpart) return '';
+  if(subpart && subpartFor(muscleKey, exercise) !== subpart) return '';
   const tier = RANK_TIERS[idx];
   if(!tier) return '';
-  return ` style="fill:var(--${tier.cls});filter:drop-shadow(0 0 3px var(--${tier.cls})) drop-shadow(0 0 8px var(--${tier.cls}))"`;
+  return ` style="fill:var(--${tier.cls});stroke:var(--${tier.cls});stroke-width:2;filter:drop-shadow(0 0 2.5px var(--${tier.cls})) drop-shadow(0 0 5px var(--${tier.cls}))"`;
 }
 function friendBodyFrontSvg(data){
   return `<svg viewBox="0 0 240 520" class="bodyfig bodyfig-mini">
@@ -2726,27 +3109,35 @@ function friendBodyFrontSvg(data){
     <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
     <path class="clavicle" d="M120,92 Q100,82 82,96"/>
     <path class="clavicle" d="M120,92 Q140,82 158,96"/>
-    <path class="musclepart"${fStyle(data,'shoulders')} d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
-    <path class="musclepart"${fStyle(data,'shoulders')} d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
-    <path class="musclepart"${fStyle(data,'chest')} d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/>
-    <path class="musclepart"${fStyle(data,'chest')} d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/>
+    <path class="musclepart"${fStyle(data,'shoulders','front')} d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+    <path class="musclepart"${fStyle(data,'shoulders','front')} d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+    <g clip-path="url(#clipTop33)"><path class="musclepart"${fStyle(data,'chest','upper')} d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+    <g clip-path="url(#clipMid33)"><path class="musclepart"${fStyle(data,'chest','mid')} d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+    <g clip-path="url(#clipBot33)"><path class="musclepart"${fStyle(data,'chest','lower')} d="M132,100 C150,99 160,113 160,129 C160,144 151,153 137,151 C127,150 122,140 123,127 C124,115 127,104 132,100 Z"/></g>
+    <g clip-path="url(#clipTop33)"><path class="musclepart"${fStyle(data,'chest','upper')} d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
+    <g clip-path="url(#clipMid33)"><path class="musclepart"${fStyle(data,'chest','mid')} d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
+    <g clip-path="url(#clipBot33)"><path class="musclepart"${fStyle(data,'chest','lower')} d="M108,100 C90,99 80,113 80,129 C80,144 89,153 103,151 C113,150 118,140 117,127 C116,115 113,104 108,100 Z"/></g>
     <path class="bodypart-neutral" d="M92,158 Q98,186 96,214 L88,212 Q85,184 84,160 Z"/>
     <path class="bodypart-neutral" d="M148,158 Q142,186 144,214 L152,212 Q155,184 156,160 Z"/>
-    <rect class="musclepart"${fStyle(data,'abs')} x="98" y="158" width="19" height="18" rx="6"/>
-    <rect class="musclepart"${fStyle(data,'abs')} x="123" y="158" width="19" height="18" rx="6"/>
-    <rect class="musclepart"${fStyle(data,'abs')} x="98" y="181" width="19" height="18" rx="6"/>
-    <rect class="musclepart"${fStyle(data,'abs')} x="123" y="181" width="19" height="18" rx="6"/>
-    <rect class="musclepart"${fStyle(data,'abs')} x="98" y="204" width="19" height="18" rx="6"/>
-    <rect class="musclepart"${fStyle(data,'abs')} x="123" y="204" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs','upper')} x="98" y="158" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs','upper')} x="123" y="158" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs','mid')} x="98" y="181" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs','mid')} x="123" y="181" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs','lower')} x="98" y="204" width="19" height="18" rx="6"/>
+    <rect class="musclepart"${fStyle(data,'abs','lower')} x="123" y="204" width="19" height="18" rx="6"/>
     <path class="bodypart-neutral" d="M90,230 Q120,240 150,230 L152,248 Q120,258 88,248 Z"/>
-    <path class="musclepart"${fStyle(data,'biceps')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
-    <path class="musclepart"${fStyle(data,'biceps')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'biceps','upper')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'biceps','lower')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'biceps','upper')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'biceps','lower')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
     <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
     <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
     <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
     <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
-    <path class="musclepart"${fStyle(data,'quads')} d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/>
-    <path class="musclepart"${fStyle(data,'quads')} d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'quads','upper')} d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'quads','lower')} d="M148,256 C159,260 165,282 162,312 C160,340 156,366 151,392 C149,407 144,409 141,398 C138,378 137,332 139,300 C140,280 143,260 148,256 Z"/></g>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'quads','upper')} d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'quads','lower')} d="M92,256 C81,260 75,282 78,312 C80,340 84,366 89,392 C91,407 96,409 99,398 C102,378 103,332 101,300 C100,280 97,260 92,256 Z"/></g>
     <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
     <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
     <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
@@ -2759,22 +3150,29 @@ function friendBodyBackSvg(data){
     <path class="bodyhair" d="M95,32 C95,15 106,6 120,6 C134,6 145,15 145,32 C145,44 140,54 132,60 C138,50 138,30 120,30 C102,30 102,50 108,60 C100,54 95,44 95,32 Z"/>
     <path class="bodypart-neutral" d="M103,66 Q120,78 137,66 L139,90 Q120,100 101,90 Z"/>
     <path class="musclepart"${fStyle(data,'back','traps')} d="M92,88 Q120,70 148,88 L164,108 Q120,126 76,108 Z"/>
-    <path class="musclepart"${fStyle(data,'shoulders')} d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
-    <path class="musclepart"${fStyle(data,'shoulders')} d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
+    <path class="musclepart"${fStyle(data,'shoulders','rear')} d="M166,94 C187,92 203,104 203,127 C203,146 191,154 176,151 C166,148 162,138 162,120 C162,106 163,98 166,94 Z"/>
+    <path class="musclepart"${fStyle(data,'shoulders','rear')} d="M74,94 C53,92 37,104 37,127 C37,146 49,154 64,151 C74,148 78,138 78,120 C78,106 77,98 74,94 Z"/>
     <path class="musclepart"${fStyle(data,'back','lats')} d="M148,110 C168,115 174,138 168,162 C164,180 150,190 136,186 C128,183 126,170 129,152 C132,134 139,114 148,110 Z"/>
     <path class="musclepart"${fStyle(data,'back','lats')} d="M92,110 C72,115 66,138 72,162 C76,180 90,190 104,186 C112,183 114,170 111,152 C108,134 101,114 92,110 Z"/>
     <rect class="musclepart"${fStyle(data,'back','lower')} x="104" y="166" width="32" height="34" rx="12"/>
-    <path class="musclepart"${fStyle(data,'triceps')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/>
-    <path class="musclepart"${fStyle(data,'triceps')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'triceps','upper')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'triceps','lower')} d="M188,150 C202,153 204,172 201,194 C199,209 191,218 182,212 C175,206 174,184 177,164 C179,155 183,150 188,150 Z"/></g>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'triceps','upper')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'triceps','lower')} d="M52,150 C38,153 36,172 39,194 C41,209 49,218 58,212 C65,206 66,184 63,164 C61,155 57,150 52,150 Z"/></g>
     <path class="bodypart-neutral" d="M190,212 C197,218 202,236 198,258 C196,273 189,280 181,275 C175,269 174,250 177,232 C179,221 184,212 190,212 Z"/>
     <path class="bodypart-neutral" d="M50,212 C43,218 38,236 42,258 C44,273 51,280 59,275 C65,269 66,250 63,232 C61,221 56,212 50,212 Z"/>
     <ellipse class="bodypart-neutral" cx="191" cy="288" rx="11" ry="13"/>
     <ellipse class="bodypart-neutral" cx="49" cy="288" rx="11" ry="13"/>
-    <path class="musclepart"${fStyle(data,'glutes')} d="M120,206 C99,206 87,219 87,236 C87,252 101,264 120,264 C139,264 153,252 153,236 C153,219 141,206 120,206 Z"/>
-    <path class="musclepart"${fStyle(data,'hamstrings')} d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/>
-    <path class="musclepart"${fStyle(data,'hamstrings')} d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/>
-    <path class="musclepart"${fStyle(data,'calves')} d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/>
-    <path class="musclepart"${fStyle(data,'calves')} d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/>
+    <path class="musclepart"${fStyle(data,'glutes')} d="M118,210 C110,204 95,206 89,220 C83,236 87,256 103,263 C112,266 119,260 119,248 C119,236 120,218 118,210 Z"/>
+    <path class="musclepart"${fStyle(data,'glutes')} d="M122,210 C130,204 145,206 151,220 C157,236 153,256 137,263 C128,266 121,260 121,248 C121,236 120,218 122,210 Z"/>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'hamstrings','upper')} d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'hamstrings','lower')} d="M148,270 C159,273 165,290 162,314 C160,340 156,364 151,388 C149,400 144,401 141,392 C138,374 137,332 139,304 C140,286 143,272 148,270 Z"/></g>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'hamstrings','upper')} d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'hamstrings','lower')} d="M92,270 C81,273 75,290 78,314 C80,340 84,364 89,388 C91,400 96,401 99,392 C102,374 103,332 101,304 C100,286 97,272 92,270 Z"/></g>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'calves','upper')} d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'calves','lower')} d="M148,406 C157,409 161,422 159,440 C157,456 152,466 144,466 C137,466 134,456 135,440 C136,424 140,408 148,406 Z"/></g>
+    <g clip-path="url(#clipTop50)"><path class="musclepart"${fStyle(data,'calves','upper')} d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/></g>
+    <g clip-path="url(#clipBot50)"><path class="musclepart"${fStyle(data,'calves','lower')} d="M92,406 C83,409 79,422 81,440 C83,456 88,466 96,466 C103,466 106,456 105,440 C104,424 100,408 92,406 Z"/></g>
     <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
     <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
   </svg>`;
@@ -2825,6 +3223,7 @@ function renderFriends(){
       </div>
     </div>`;
   }).join('');
+  addMuscleDividers(container);
 }
 
 // init
