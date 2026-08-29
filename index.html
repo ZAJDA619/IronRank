@@ -1132,6 +1132,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Chest Press Machine':'chest',
   'Landmine Press':'chest',
   'Svend Press':'chest',
+  'Machine Chest Fly':'chest',
+  'Smith Machine Bench Press':'chest',
+  'Weighted Dips':'chest',
+  'Incline Cable Fly':'chest',
   // Back
   'Deadlift':'back',
   'Sumo Deadlift':'back',
@@ -1147,6 +1151,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Face Pull':'back',
   'Straight-Arm Pulldown':'back',
   'Inverted Row':'back',
+  'Rack Pull':'back',
+  'Meadows Row':'back',
+  'Landmine Row':'back',
+  'Reverse Grip Lat Pulldown':'back',
   // Shoulders
   'Overhead Press':'shoulders',
   'Dumbbell Shoulder Press':'shoulders',
@@ -1157,6 +1165,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Upright Row':'shoulders',
   'Shoulder Press Machine':'shoulders',
   'Front Raise':'shoulders',
+  'Machine Shoulder Press':'shoulders',
+  'Cable Front Raise':'shoulders',
+  'Cable Rear Delt Fly':'shoulders',
+  'Reverse Pec Deck':'shoulders',
   // Biceps
   'Bicep Curl':'biceps',
   'EZ-Bar Curl':'biceps',
@@ -1167,6 +1179,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Cross-Body Hammer Curl':'biceps',
   'Cable Hammer Curl':'biceps',
   '21s Bicep Curl':'biceps',
+  'Spider Curl':'biceps',
+  'Incline Dumbbell Curl':'biceps',
+  'Cable Rope Hammer Curl':'biceps',
+  'Zottman Curl':'biceps',
   // Triceps
   'Tricep Dips':'triceps',
   'Skull Crushers':'triceps',
@@ -1177,6 +1193,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Diamond Push-ups':'triceps',
   'Cable Overhead Extension':'triceps',
   'JM Press':'triceps',
+  'Bench Dips':'triceps',
+  'Rope Pushdown':'triceps',
+  'Dumbbell Tricep Extension':'triceps',
+  'Lying Tricep Extension':'triceps',
   // Abs
   'Crunches':'abs',
   'Plank':'abs',
@@ -1188,6 +1208,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Sit-ups':'abs',
   'Ab Wheel Rollout':'abs',
   'Mountain Climbers':'abs',
+  'V-Ups':'abs',
+  'Reverse Crunch':'abs',
+  'Side Plank':'abs',
+  'Cable Woodchopper':'abs',
   // Quads
   'Squat':'quads',
   'Front Squat':'quads',
@@ -1199,6 +1223,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Goblet Squat':'quads',
   'Sissy Squat':'quads',
   'Step-ups':'quads',
+  'Smith Machine Squat':'quads',
+  'Walking Lunges':'quads',
+  'Pistol Squat':'quads',
+  'Zercher Squat':'quads',
   // Hamstrings
   'Romanian Deadlift':'hamstrings',
   'Single-Leg Deadlift':'hamstrings',
@@ -1207,6 +1235,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Nordic Curl':'hamstrings',
   'Stiff-Leg Deadlift':'hamstrings',
   'Cable Pull-Through':'hamstrings',
+  'Glute Ham Raise':'hamstrings',
+  'Seated Leg Curl':'hamstrings',
+  'Kettlebell Swing':'hamstrings',
   // Glutes
   'Hip Thrust':'glutes',
   'Glute Bridge':'glutes',
@@ -1215,12 +1246,17 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Donkey Kick':'glutes',
   'Frog Pump':'glutes',
   'Curtsy Lunge':'glutes',
+  'Single-Leg Hip Thrust':'glutes',
+  'B-Stance Hip Thrust':'glutes',
+  'Reverse Hyperextension':'glutes',
   // Calves
   'Standing Calf Raise':'calves',
   'Seated Calf Raise':'calves',
   'Donkey Calf Raise':'calves',
   'Leg Press Calf Raise':'calves',
   'Single-Leg Calf Raise':'calves',
+  'Smith Machine Calf Raise':'calves',
+  'Seated Calf Press':'calves',
 };
 const DEFAULT_EXERCISES = Object.keys(DEFAULT_EXERCISE_MUSCLE);
 
@@ -1235,41 +1271,53 @@ const MUSCLE_SUBPART_BY_EXERCISE = {
     'Bent-Over Row':'lats', 'Pull-ups':'lats', 'Chin-ups':'lats', 'One-Arm Dumbbell Row':'lats',
     'Seated Cable Row':'lats', 'Lat Pulldown':'lats', 'T-Bar Row':'lats',
     'Shrugs':'traps',
+    'Rack Pull':'lower', 'Meadows Row':'lats', 'Landmine Row':'lats', 'Reverse Grip Lat Pulldown':'lats',
   },
   chest: {
     'Incline Bench Press':'upper', 'Incline Dumbbell Bench Press':'upper',
     'Decline Bench Press':'lower', 'Dips':'lower',
+    'Weighted Dips':'lower', 'Incline Cable Fly':'upper',
   },
   shoulders: {
     'Overhead Press':'front', 'Dumbbell Shoulder Press':'front', 'Arnold Press':'front',
     'Front Raise':'front', 'Shoulder Press Machine':'front', 'Lateral Raise':'front',
     'Cable Lateral Raise':'front', 'Upright Row':'front',
     'Rear Delt Fly':'rear',
+    'Machine Shoulder Press':'front', 'Cable Front Raise':'front',
+    'Cable Rear Delt Fly':'rear', 'Reverse Pec Deck':'rear',
   },
   biceps: {
     'Hammer Curl':'lower', 'Cross-Body Hammer Curl':'lower', 'Cable Hammer Curl':'lower',
     'Concentration Curl':'upper', 'Preacher Curl':'upper',
+    'Spider Curl':'upper', 'Incline Dumbbell Curl':'upper',
+    'Cable Rope Hammer Curl':'lower', 'Zottman Curl':'lower',
   },
   triceps: {
     'Overhead Tricep Extension':'upper', 'Skull Crushers':'upper', 'Cable Overhead Extension':'upper',
     'Tricep Pushdown':'lower', 'Tricep Kickback':'lower', 'Close-Grip Bench Press':'lower',
     'Diamond Push-ups':'lower', 'JM Press':'lower',
+    'Bench Dips':'lower', 'Rope Pushdown':'lower',
+    'Dumbbell Tricep Extension':'upper', 'Lying Tricep Extension':'upper',
   },
   abs: {
     'Crunches':'upper', 'Sit-ups':'upper', 'Cable Crunch':'upper',
     'Leg Raises':'lower', 'Hanging Leg Raise':'lower', 'Mountain Climbers':'lower',
+    'V-Ups':'upper', 'Reverse Crunch':'lower',
   },
   quads: {
     'Leg Press':'upper', 'Hack Squat':'upper',
     'Front Squat':'lower', 'Goblet Squat':'lower', 'Leg Extension':'lower', 'Sissy Squat':'lower',
+    'Pistol Squat':'lower',
   },
   hamstrings: {
     'Romanian Deadlift':'upper', 'Good Morning':'upper', 'Stiff-Leg Deadlift':'upper', 'Cable Pull-Through':'upper',
     'Leg Curl':'lower', 'Nordic Curl':'lower', 'Single-Leg Deadlift':'lower',
+    'Kettlebell Swing':'upper', 'Glute Ham Raise':'lower', 'Seated Leg Curl':'lower',
   },
   calves: {
     'Seated Calf Raise':'lower',
     'Standing Calf Raise':'upper', 'Donkey Calf Raise':'upper', 'Leg Press Calf Raise':'upper', 'Single-Leg Calf Raise':'upper',
+    'Smith Machine Calf Raise':'upper', 'Seated Calf Press':'lower',
   },
 };
 function subpartFor(muscleKey, exerciseName){
