@@ -2971,7 +2971,7 @@ document.getElementById('removeRoutinePhotoBtn').addEventListener('click', () =>
 
 // ---------- Avatar crop (drag to pan, slider to zoom — like Instagram's avatar picker) ----------
 const CROP_SIZE = 260;
-const AVATAR_OUT = 360; // bigger than the tiny 64px display size so the lightbox zoom isn't blurry
+const AVATAR_OUT = 640; // bigger than the tiny display size so the lightbox zoom (up to 520px) isn't blurry
 let cropState = {img:null, baseScale:1, scale:1, tx:0, ty:0, dragging:false, startX:0, startY:0, startTx:0, startTy:0};
 
 function openCropModal(img){
