@@ -705,6 +705,8 @@
         <button class="btn secondary" id="startNewRoutineBtn" style="flex:1">📋 Nová rutina</button>
       </div>
 
+      <div id="quickStartRoutines" style="display:none; margin-bottom:20px"></div>
+
       <div id="logFormBody" style="display:none">
         <div class="log-section" id="routineDetailsSection" style="display:none; margin-top:0; padding-top:0; border-top:none">
           <label>Název rutiny</label>
@@ -1897,6 +1899,30 @@ function renderPresetsRow(){
     <button type="button" class="btn secondary small" id="managePresetsBtn">⚙ Spravovat rutiny</button>
   </div>`;
   document.getElementById('managePresetsBtn').addEventListener('click', openPresetModal);
+  renderQuickStartRoutines();
+}
+
+function renderQuickStartRoutines(){
+  const wrap = document.getElementById('quickStartRoutines');
+  if(!wrap) return;
+  const presets = state.presets || [];
+  if(!presets.length || logMode){
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.style.display = 'block';
+  wrap.innerHTML = `<div class="tiny" style="margin-bottom:8px">Nebo pokračuj s uloženou rutinou:</div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px">
+      ${presets.map(p => `<button type="button" class="btn secondary small" data-startpreset="${p.id}">⚡ ${escapeHtml(p.name)} <span class="tiny">(${p.exercises.length})</span></button>`).join('')}
+    </div>`;
+}
+
+async function startWorkoutFromPreset(id){
+  if(!await resetAndCancelLogging()) return;
+  showLogForm('workout');
+  applyPreset(id);
+  document.getElementById('exSearchInput').focus();
 }
 
 function applyPreset(id){
@@ -2328,6 +2354,7 @@ async function resetAndCancelLogging(){
   document.getElementById('routinePhotoInput').value = '';
   updateRoutinePhotoPreview();
   hideLogForm();
+  renderQuickStartRoutines();
   return true;
 }
 
@@ -2375,6 +2402,9 @@ document.getElementById('saveRoutineBtn').addEventListener('click', async () => 
 });
 
 document.addEventListener('click', async (e) => {
+  const start = e.target.closest('[data-startpreset]');
+  if(start){ startWorkoutFromPreset(start.dataset.startpreset); return; }
+
   const apply = e.target.closest('[data-applypreset]');
   if(apply){ applyPreset(apply.dataset.applypreset); return; }
 
