@@ -395,8 +395,17 @@
     <label>Jméno / přezdívka</label>
     <input type="text" id="nameInput" maxlength="30" placeholder="např. Kája">
 
-    <label>Věk</label>
-    <input type="number" id="ageInput" min="8" max="100" placeholder="např. 15">
+    <div class="row2">
+      <div>
+        <label>Věk</label>
+        <input type="number" id="ageInput" min="8" max="100" placeholder="např. 15">
+      </div>
+      <div>
+        <label>Tvoje váha (kg) <span class="tiny">(nepovinné)</span></label>
+        <input type="number" id="bodyWeightInput" min="20" max="300" step="0.1" placeholder="např. 75">
+      </div>
+    </div>
+    <div class="tiny" style="margin-top:-8px; margin-bottom:14px">Používáme ji u cviků s vlastní vahou (shyby, kliky, dipy...), aby se k přidané váze připočetla i tvoje tělo — ranky pak sedí přesněji.</div>
     <div id="guestUpgradeBox" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--border)">
       <div class="tiny" style="margin-bottom:8px">Jsi tu jako host — progress je jen v tomto zařízení. Přihlas se nebo si založ účet a nic ti nezmizí.</div>
       <button class="profile-link" id="guestUpgradeBtn">🔐 Přihlásit se / zaregistrovat se</button>
@@ -984,6 +993,7 @@
           <input type="number" id="prLogReps" min="1" step="1">
         </div>
       </div>
+      <div class="tiny" id="prLogWeightHint" style="display:none; margin-top:-8px; margin-bottom:10px"></div>
       <div class="flexend">
         <button class="btn" id="prLogSaveBtn">Uložit PR</button>
       </div>
@@ -1463,9 +1473,10 @@ function loadState(){
   if(raw){
     try{
       const parsed = JSON.parse(raw);
-      if(!parsed.profile) parsed.profile = {age:null, name:'', avatar:null};
+      if(!parsed.profile) parsed.profile = {age:null, name:'', avatar:null, weight:null};
       if(parsed.profile.name === undefined) parsed.profile.name = '';
       if(parsed.profile.avatar === undefined) parsed.profile.avatar = null;
+      if(parsed.profile.weight === undefined) parsed.profile.weight = null;
       parsed.exerciseMuscles = {...DEFAULT_EXERCISE_MUSCLE, ...(parsed.exerciseMuscles || {})};
       if(!parsed.manualPRs) parsed.manualPRs = {};
       // migrate old single-object PR format to an append-only history array
@@ -1478,7 +1489,7 @@ function loadState(){
       return parsed;
     }catch(e){}
   }
-  return {xp:0, workouts:[], exercises:{}, unlockedAchievements:[], profile:{age:null, name:'', avatar:null}, exerciseMuscles:{...DEFAULT_EXERCISE_MUSCLE}, manualPRs:{}, presets:[], gallery:[]};
+  return {xp:0, workouts:[], exercises:{}, unlockedAchievements:[], profile:{age:null, name:'', avatar:null, weight:null}, exerciseMuscles:{...DEFAULT_EXERCISE_MUSCLE}, manualPRs:{}, presets:[], gallery:[]};
 }
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1512,6 +1523,23 @@ function epley1RM(weight, reps, age){
   if(reps <= 1) return weight * ageFactor(age);
   const cappedReps = Math.min(reps, 12); // Epley diverges badly past ~12 reps
   return weight * (1 + cappedReps/30) * ageFactor(age);
+}
+// Exercises where the lifter's own body is most of the load — the "weight" logged for
+// these is just added weight (a dip belt, a weighted vest...), so the actual load moved
+// is that plus body weight. Without this, someone doing 15 strict pull-ups with no added
+// weight would show as lifting 0 kg.
+const BODYWEIGHT_EXERCISES = new Set([
+  'Push-ups', 'Dips', 'Tricep Dips', 'Weighted Dips', 'Bench Dips', 'Diamond Push-ups',
+  'Pull-ups', 'Chin-ups', 'Inverted Row', 'Pike Push-up', 'Pistol Squat',
+  'Nordic Curl', 'Reverse Nordic Curl', 'Glute Ham Raise', 'Sissy Squat',
+  'Toe-to-Bar', 'Hollow Body Hold', 'V-Ups', 'Hanging Leg Raise',
+]);
+// Total load actually moved for a given exercise: added weight, plus body weight for
+// bodyweight-based exercises (if the lifter entered one in their profile).
+function effectiveLoad(name, weight){
+  const w = weight || 0;
+  if(BODYWEIGHT_EXERCISES.has(name) && state.profile.weight) return w + state.profile.weight;
+  return w;
 }
 function levelFromXP(xp){
   // cumulative XP needed to reach level n grows; level up threshold = 100 * level^1.35
@@ -2594,23 +2622,39 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+function currentPRLogName(){
+  return resolveExerciseName(document.getElementById('prLogNewName').value) || document.getElementById('prLogSelect').value;
+}
+function updatePRLogWeightHint(){
+  const hint = document.getElementById('prLogWeightHint');
+  const isBW = BODYWEIGHT_EXERCISES.has(currentPRLogName());
+  if(!isBW){ hint.style.display = 'none'; return; }
+  hint.style.display = 'block';
+  hint.textContent = state.profile.weight
+    ? `Cvik s vlastní vahou — zadej jen přidanou váhu (0 = bez zátěže), tvoje váha z profilu (${state.profile.weight} kg) se připočte automaticky.`
+    : `Cvik s vlastní vahou — zadej jen přidanou váhu (0 = bez zátěže). Vyplň si váhu v profilu, ať se ti to počítá přesněji.`;
+}
 document.getElementById('prLogNewName').addEventListener('input', () => {
   const newName = resolveExerciseName(document.getElementById('prLogNewName').value);
   const needsMuscle = newName && !state.exerciseMuscles[newName];
   document.getElementById('prLogMuscleWrap').style.display = needsMuscle ? 'block' : 'none';
+  updatePRLogWeightHint();
 });
+document.getElementById('prLogSelect').addEventListener('change', updatePRLogWeightHint);
 
 document.getElementById('prLogSaveBtn').addEventListener('click', () => {
   const newName = resolveExerciseName(document.getElementById('prLogNewName').value);
   const selected = document.getElementById('prLogSelect').value;
   const name = newName || selected;
-  const weight = parseFloat(document.getElementById('prLogWeight').value);
-  const reps = parseInt(document.getElementById('prLogReps').value, 10);
   if(!name){
     showToast('Vyber cvik nebo zadej jeho název.', 'warn');
     return;
   }
-  if(!weight || weight <= 0 || !reps || reps <= 0){
+  const isBW = BODYWEIGHT_EXERCISES.has(name);
+  const weightRaw = document.getElementById('prLogWeight').value;
+  const weight = weightRaw === '' ? (isBW ? 0 : NaN) : parseFloat(weightRaw);
+  const reps = parseInt(document.getElementById('prLogReps').value, 10);
+  if(isNaN(weight) || weight < 0 || (!isBW && weight <= 0) || !reps || reps <= 0){
     showToast('Zadej platnou váhu a počet opakování.', 'warn');
     return;
   }
@@ -2633,9 +2677,11 @@ document.getElementById('prLogSaveBtn').addEventListener('click', () => {
   document.getElementById('prLogMuscleWrap').style.display = 'none';
   document.getElementById('prLogWeight').value = '';
   document.getElementById('prLogReps').value = '';
+  updatePRLogWeightHint();
 
   renderAll();
-  showToast(`PR uloženo: ${name} — ${weight} kg × ${reps}`);
+  const loadNote = isBW && state.profile.weight ? ` (+ tělo = ${effectiveLoad(name, weight)} kg)` : '';
+  showToast(`PR uloženo: ${name} — ${weight} kg × ${reps}${loadNote}`);
   queueAchievementPopups(newlyUnlocked);
 });
 
@@ -2910,7 +2956,7 @@ function recomputeExerciseStats(){
     if(!entries || entries.length === 0) return;
     let baseline = null, best = -Infinity, bestSet = null;
     entries.forEach((pr, i) => {
-      const e1rm = epley1RM(pr.weight, pr.reps, state.profile.age);
+      const e1rm = epley1RM(effectiveLoad(name, pr.weight), pr.reps, state.profile.age);
       if(i === 0) baseline = e1rm;
       if(e1rm >= best){ best = e1rm; bestSet = {weight: pr.weight, reps: pr.reps, date: pr.date, manual: true}; }
     });
@@ -2947,9 +2993,11 @@ document.getElementById('deletePRBtn').addEventListener('click', async () => {
   showToast('PR smazán.');
 });
 document.getElementById('savePRBtn').addEventListener('click', () => {
-  const w = parseFloat(document.getElementById('prWeightInput').value);
+  const isBW = BODYWEIGHT_EXERCISES.has(prEditingExercise);
+  const wRaw = document.getElementById('prWeightInput').value;
+  const w = wRaw === '' ? (isBW ? 0 : NaN) : parseFloat(wRaw);
   const r = parseInt(document.getElementById('prRepsInput').value, 10);
-  if(!w || w <= 0 || !r || r <= 0){
+  if(isNaN(w) || w < 0 || (!isBW && w <= 0) || !r || r <= 0){
     showToast('Zadej platnou váhu a počet opakování.', 'warn');
     return;
   }
@@ -2981,6 +3029,7 @@ function openProfileModal(){
     : 'Uprav si jméno, věk nebo profilovku.';
   document.getElementById('ageInput').value = state.profile.age || '';
   document.getElementById('nameInput').value = state.profile.name || '';
+  document.getElementById('bodyWeightInput').value = state.profile.weight || '';
   document.getElementById('avatarInput').value = '';
   pendingAvatar = state.profile.avatar || null;
   updateAvatarPreview();
@@ -3226,8 +3275,15 @@ document.getElementById('saveAgeBtn').addEventListener('click', () => {
     showToast('Zadej platný věk (8–100).', 'warn');
     return;
   }
+  const weightRaw = document.getElementById('bodyWeightInput').value;
+  const weightVal = weightRaw === '' ? null : parseFloat(weightRaw);
+  if(weightVal !== null && (isNaN(weightVal) || weightVal < 20 || weightVal > 300)){
+    showToast('Zadej platnou váhu (20–300 kg), nebo pole nech prázdné.', 'warn');
+    return;
+  }
   state.profile.age = val;
   state.profile.name = name;
+  state.profile.weight = weightVal;
   state.profile.avatar = pendingAvatar;
   recomputeExerciseStats();
   saveState();
@@ -3540,7 +3596,8 @@ auth.onAuthStateChanged(user => {
     if(doc.exists){
       const cloud = doc.data();
       state = Object.assign(loadState(), cloud);
-      if(!state.profile) state.profile = {age:null, name:'', avatar:null};
+      if(!state.profile) state.profile = {age:null, name:'', avatar:null, weight:null};
+      if(state.profile.weight === undefined) state.profile.weight = null;
       state.exerciseMuscles = {...DEFAULT_EXERCISE_MUSCLE, ...(state.exerciseMuscles || {})};
       if(!state.manualPRs) state.manualPRs = {};
       if(!Array.isArray(state.presets)) state.presets = [];
