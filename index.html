@@ -1136,6 +1136,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Smith Machine Bench Press':'chest',
   'Weighted Dips':'chest',
   'Incline Cable Fly':'chest',
+  'Guillotine Press':'chest',
+  'Floor Press':'chest',
+  'Squeeze Press':'chest',
   // Back
   'Deadlift':'back',
   'Sumo Deadlift':'back',
@@ -1155,6 +1158,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Meadows Row':'back',
   'Landmine Row':'back',
   'Reverse Grip Lat Pulldown':'back',
+  'Pendlay Row':'back',
+  'Chest-Supported Row':'back',
+  'Kroc Row':'back',
   // Shoulders
   'Overhead Press':'shoulders',
   'Dumbbell Shoulder Press':'shoulders',
@@ -1169,6 +1175,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Cable Front Raise':'shoulders',
   'Cable Rear Delt Fly':'shoulders',
   'Reverse Pec Deck':'shoulders',
+  'Pike Push-up':'shoulders',
+  'Landmine Lateral Raise':'shoulders',
+  'Behind-the-Neck Press':'shoulders',
   // Biceps
   'Bicep Curl':'biceps',
   'EZ-Bar Curl':'biceps',
@@ -1183,6 +1192,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Incline Dumbbell Curl':'biceps',
   'Cable Rope Hammer Curl':'biceps',
   'Zottman Curl':'biceps',
+  'Waiter Curl':'biceps',
+  'Reverse Curl':'biceps',
+  'Bayesian Curl':'biceps',
   // Triceps
   'Tricep Dips':'triceps',
   'Skull Crushers':'triceps',
@@ -1197,6 +1209,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Rope Pushdown':'triceps',
   'Dumbbell Tricep Extension':'triceps',
   'Lying Tricep Extension':'triceps',
+  'Tate Press':'triceps',
+  'Overhead Rope Extension':'triceps',
+  'French Press':'triceps',
   // Abs
   'Crunches':'abs',
   'Plank':'abs',
@@ -1212,6 +1227,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Reverse Crunch':'abs',
   'Side Plank':'abs',
   'Cable Woodchopper':'abs',
+  'Hollow Body Hold':'abs',
+  'Cable Sit-up':'abs',
+  'Toe-to-Bar':'abs',
   // Quads
   'Squat':'quads',
   'Front Squat':'quads',
@@ -1227,6 +1245,10 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Walking Lunges':'quads',
   'Pistol Squat':'quads',
   'Zercher Squat':'quads',
+  'Belt Squat':'quads',
+  'Cyclist Squat':'quads',
+  'Sled Push':'quads',
+  'Reverse Nordic Curl':'quads',
   // Hamstrings
   'Romanian Deadlift':'hamstrings',
   'Single-Leg Deadlift':'hamstrings',
@@ -1238,6 +1260,8 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Glute Ham Raise':'hamstrings',
   'Seated Leg Curl':'hamstrings',
   'Kettlebell Swing':'hamstrings',
+  'Cable Leg Curl':'hamstrings',
+  'Snatch-Grip Deadlift':'hamstrings',
   // Glutes
   'Hip Thrust':'glutes',
   'Glute Bridge':'glutes',
@@ -1249,6 +1273,9 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Single-Leg Hip Thrust':'glutes',
   'B-Stance Hip Thrust':'glutes',
   'Reverse Hyperextension':'glutes',
+  'Hip Abduction Machine':'glutes',
+  'Barbell Glute Bridge':'glutes',
+  'Standing Hip Thrust':'glutes',
   // Calves
   'Standing Calf Raise':'calves',
   'Seated Calf Raise':'calves',
@@ -1257,6 +1284,8 @@ const DEFAULT_EXERCISE_MUSCLE = {
   'Single-Leg Calf Raise':'calves',
   'Smith Machine Calf Raise':'calves',
   'Seated Calf Press':'calves',
+  'Calf Press Machine':'calves',
+  'Eccentric Calf Raise':'calves',
 };
 const DEFAULT_EXERCISES = Object.keys(DEFAULT_EXERCISE_MUSCLE);
 
@@ -1272,6 +1301,7 @@ const MUSCLE_SUBPART_BY_EXERCISE = {
     'Seated Cable Row':'lats', 'Lat Pulldown':'lats', 'T-Bar Row':'lats',
     'Shrugs':'traps',
     'Rack Pull':'lower', 'Meadows Row':'lats', 'Landmine Row':'lats', 'Reverse Grip Lat Pulldown':'lats',
+    'Pendlay Row':'lats', 'Chest-Supported Row':'lats', 'Kroc Row':'lats',
   },
   chest: {
     'Incline Bench Press':'upper', 'Incline Dumbbell Bench Press':'upper',
@@ -1285,12 +1315,14 @@ const MUSCLE_SUBPART_BY_EXERCISE = {
     'Rear Delt Fly':'rear',
     'Machine Shoulder Press':'front', 'Cable Front Raise':'front',
     'Cable Rear Delt Fly':'rear', 'Reverse Pec Deck':'rear',
+    'Pike Push-up':'front', 'Landmine Lateral Raise':'front', 'Behind-the-Neck Press':'front',
   },
   biceps: {
     'Hammer Curl':'lower', 'Cross-Body Hammer Curl':'lower', 'Cable Hammer Curl':'lower',
     'Concentration Curl':'upper', 'Preacher Curl':'upper',
     'Spider Curl':'upper', 'Incline Dumbbell Curl':'upper',
     'Cable Rope Hammer Curl':'lower', 'Zottman Curl':'lower',
+    'Bayesian Curl':'upper',
   },
   triceps: {
     'Overhead Tricep Extension':'upper', 'Skull Crushers':'upper', 'Cable Overhead Extension':'upper',
@@ -1298,26 +1330,31 @@ const MUSCLE_SUBPART_BY_EXERCISE = {
     'Diamond Push-ups':'lower', 'JM Press':'lower',
     'Bench Dips':'lower', 'Rope Pushdown':'lower',
     'Dumbbell Tricep Extension':'upper', 'Lying Tricep Extension':'upper',
+    'Tate Press':'upper', 'Overhead Rope Extension':'upper', 'French Press':'upper',
   },
   abs: {
     'Crunches':'upper', 'Sit-ups':'upper', 'Cable Crunch':'upper',
     'Leg Raises':'lower', 'Hanging Leg Raise':'lower', 'Mountain Climbers':'lower',
     'V-Ups':'upper', 'Reverse Crunch':'lower',
+    'Cable Sit-up':'upper', 'Toe-to-Bar':'lower',
   },
   quads: {
     'Leg Press':'upper', 'Hack Squat':'upper',
     'Front Squat':'lower', 'Goblet Squat':'lower', 'Leg Extension':'lower', 'Sissy Squat':'lower',
     'Pistol Squat':'lower',
+    'Cyclist Squat':'lower', 'Reverse Nordic Curl':'lower',
   },
   hamstrings: {
     'Romanian Deadlift':'upper', 'Good Morning':'upper', 'Stiff-Leg Deadlift':'upper', 'Cable Pull-Through':'upper',
     'Leg Curl':'lower', 'Nordic Curl':'lower', 'Single-Leg Deadlift':'lower',
     'Kettlebell Swing':'upper', 'Glute Ham Raise':'lower', 'Seated Leg Curl':'lower',
+    'Cable Leg Curl':'lower', 'Snatch-Grip Deadlift':'upper',
   },
   calves: {
     'Seated Calf Raise':'lower',
     'Standing Calf Raise':'upper', 'Donkey Calf Raise':'upper', 'Leg Press Calf Raise':'upper', 'Single-Leg Calf Raise':'upper',
     'Smith Machine Calf Raise':'upper', 'Seated Calf Press':'lower',
+    'Calf Press Machine':'upper',
   },
 };
 function subpartFor(muscleKey, exerciseName){
@@ -1377,6 +1414,50 @@ const ACHIEVEMENT_DEFS = [
   {id:'volume50000', icon:'🌋', name:'Nezastavitelná síla', desc:'Zvedni celkem 50 000 kg.', check: s => totalVolume(s) >= 50000},
 ];
 
+// One-time cleanup: merges exercise names that only differ by case or spacing
+// (e.g. someone typed "bench press" instead of picking "Bench Press" from the
+// list) into a single canonical entry, so they stop showing up as duplicates.
+function dedupeExerciseNames(s){
+  const groups = {}; // lowercase, trimmed -> Set of exact names seen
+  const collect = (name) => {
+    if(!name) return;
+    const key = name.trim().toLowerCase();
+    if(!key) return;
+    (groups[key] = groups[key] || new Set()).add(name);
+  };
+  Object.keys(s.exerciseMuscles || {}).forEach(collect);
+  Object.keys(s.manualPRs || {}).forEach(collect);
+  (s.workouts || []).forEach(w => (w.exercises || []).forEach(e => collect(e.name)));
+  (s.presets || []).forEach(p => (p.exercises || []).forEach(collect));
+
+  let changed = false;
+  Object.values(groups).forEach(variants => {
+    if(variants.size < 2) return;
+    changed = true;
+    const list = [...variants];
+    // Prefer the built-in exercise's exact spelling; otherwise keep whichever
+    // variant has the most PR history.
+    const canonical = list.find(n => DEFAULT_EXERCISE_MUSCLE[n])
+      || list.slice().sort((a, b) => ((s.manualPRs[b] || []).length) - ((s.manualPRs[a] || []).length))[0];
+    list.forEach(n => {
+      if(n === canonical) return;
+      if(s.manualPRs[n]){
+        s.manualPRs[canonical] = [...(s.manualPRs[canonical] || []), ...s.manualPRs[n]];
+        delete s.manualPRs[n];
+      }
+      if(s.exerciseMuscles[n]){
+        if(!s.exerciseMuscles[canonical]) s.exerciseMuscles[canonical] = s.exerciseMuscles[n];
+        delete s.exerciseMuscles[n];
+      }
+      (s.workouts || []).forEach(w => (w.exercises || []).forEach(e => { if(e.name === n) e.name = canonical; }));
+      (s.presets || []).forEach(p => {
+        if(!p.exercises) return;
+        p.exercises = [...new Set(p.exercises.map(x => x === n ? canonical : x))];
+      });
+    });
+  });
+  return changed;
+}
 function loadState(){
   const raw = localStorage.getItem(STORAGE_KEY);
   if(raw){
@@ -1393,6 +1474,7 @@ function loadState(){
       });
       if(!Array.isArray(parsed.presets)) parsed.presets = [];
       if(!Array.isArray(parsed.gallery)) parsed.gallery = [];
+      if(dedupeExerciseNames(parsed)) localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
       return parsed;
     }catch(e){}
   }
@@ -1856,6 +1938,17 @@ function buildExerciseOptionsHTML(placeholderText){
 function allExerciseNames(){
   return [...new Set([...DEFAULT_EXERCISES, ...Object.keys(state.exercises), ...Object.keys(state.exerciseMuscles)])].sort();
 }
+// Typing "bench press" when "Bench Press" already exists should reuse the existing
+// exercise, not silently create a near-duplicate with a different name/casing.
+function resolveExerciseName(raw){
+  const trimmed = (raw || '').trim().replace(/\s+/g, ' ');
+  if(!trimmed) return '';
+  const known = allExerciseNames();
+  if(known.includes(trimmed)) return trimmed;
+  const lower = trimmed.toLowerCase();
+  const existing = known.find(n => n.toLowerCase() === lower);
+  return existing || trimmed;
+}
 
 // ---------- Custom exercise search (native <datalist> isn't supported on iOS Safari) ----------
 function renderExSuggestions(){
@@ -2306,7 +2399,7 @@ document.getElementById('exSearchInput').addEventListener('input', () => {
 document.getElementById('exSearchInput').addEventListener('focus', renderExSuggestions);
 
 document.getElementById('addExerciseBtn').addEventListener('click', () => {
-  const name = document.getElementById('exSearchInput').value.trim();
+  const name = resolveExerciseName(document.getElementById('exSearchInput').value);
   if(!name) return;
   currentWorkoutExercises.push({name, sets:[{weight:'', reps:''}]});
   const addToPresetCheck = document.getElementById('addToPresetCheck');
@@ -2487,7 +2580,7 @@ document.addEventListener('click', async (e) => {
     const pid = addBtn.dataset.addtopreset;
     const sel = document.getElementById(`presetAddSel_${pid}`);
     const inp = document.getElementById(`presetAddInput_${pid}`);
-    const name = (inp.value.trim() || sel.value);
+    const name = resolveExerciseName(inp.value) || sel.value;
     if(!name) return;
     const preset = presetById(pid);
     if(preset && !preset.exercises.includes(name)){
@@ -2502,13 +2595,13 @@ document.addEventListener('click', async (e) => {
 });
 
 document.getElementById('prLogNewName').addEventListener('input', () => {
-  const newName = document.getElementById('prLogNewName').value.trim();
+  const newName = resolveExerciseName(document.getElementById('prLogNewName').value);
   const needsMuscle = newName && !state.exerciseMuscles[newName];
   document.getElementById('prLogMuscleWrap').style.display = needsMuscle ? 'block' : 'none';
 });
 
 document.getElementById('prLogSaveBtn').addEventListener('click', () => {
-  const newName = document.getElementById('prLogNewName').value.trim();
+  const newName = resolveExerciseName(document.getElementById('prLogNewName').value);
   const selected = document.getElementById('prLogSelect').value;
   const name = newName || selected;
   const weight = parseFloat(document.getElementById('prLogWeight').value);
@@ -3452,6 +3545,7 @@ auth.onAuthStateChanged(user => {
       if(!state.manualPRs) state.manualPRs = {};
       if(!Array.isArray(state.presets)) state.presets = [];
       if(!Array.isArray(state.gallery)) state.gallery = [];
+      if(dedupeExerciseNames(state)) scheduleCloudSync();
       recomputeExerciseStats();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } else if(wasGuest){
