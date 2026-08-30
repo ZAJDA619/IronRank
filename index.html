@@ -401,11 +401,11 @@
         <input type="number" id="ageInput" min="8" max="100" placeholder="např. 15">
       </div>
       <div>
-        <label>Tvoje váha (kg) <span class="tiny">(nepovinné)</span></label>
+        <label>Tvoje váha (kg)</label>
         <input type="number" id="bodyWeightInput" min="20" max="300" step="0.1" placeholder="např. 75">
       </div>
     </div>
-    <div class="tiny" style="margin-top:-8px; margin-bottom:14px">Používáme ji u cviků s vlastní vahou (shyby, kliky, dipy...), aby se k přidané váze připočetla i tvoje tělo — ranky pak sedí přesněji.</div>
+    <div class="tiny" style="margin-top:-8px; margin-bottom:14px">Nepovinné — používáme ji u cviků s vlastní vahou (shyby, kliky, dipy...), aby se k přidané váze připočetla i tvoje tělo — ranky pak sedí přesněji.</div>
     <div id="guestUpgradeBox" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--border)">
       <div class="tiny" style="margin-bottom:8px">Jsi tu jako host — progress je jen v tomto zařízení. Přihlas se nebo si založ účet a nic ti nezmizí.</div>
       <button class="profile-link" id="guestUpgradeBtn">🔐 Přihlásit se / zaregistrovat se</button>
@@ -621,8 +621,8 @@
             <g transform="translate(150,256) scale(1.18,1.1) translate(-150,-256)"><path class="muscle-line" d="M143,262 C141,292 141,326 145,360"/></g>
             <g transform="translate(90,256) scale(1.18,1.1) translate(-90,-256)"><path class="muscle-line" d="M83,264 C78,290 80,320 86,350"/></g>
             <g transform="translate(90,256) scale(1.18,1.1) translate(-90,-256)"><path class="muscle-line" d="M97,262 C99,292 99,326 95,360"/></g>
-            <g transform="translate(159,410) scale(1.18,1.1) translate(-159,-410)"><path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/></g>
-            <g transform="translate(81,410) scale(1.18,1.1) translate(-81,-410)"><path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/></g>
+            <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
+            <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
             <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
             <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
           </svg>
@@ -669,10 +669,10 @@
             <g transform="translate(90,272) scale(1.18,1.1) translate(-90,-272)"><path class="musclepart" data-muscle="hamstrings" data-subpart="lower" d="M75,329 Q72,360 88,390 Q95,398 100,394 Q105,360 103,329 Q90,334 75,329 Z"/></g>
             <g transform="translate(150,272) scale(1.18,1.1) translate(-150,-272)"><path class="muscle-line" d="M156,282 C160,305 158,330 152,354"/></g>
             <g transform="translate(90,272) scale(1.18,1.1) translate(-90,-272)"><path class="muscle-line" d="M84,282 C80,305 82,330 88,354"/></g>
-            <g transform="translate(150,406) scale(1.18,1.1) translate(-150,-406)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M150,406 Q159,408 163,436 Q149,432 135,436 Q140,410 150,406 Z"/></g>
-            <g transform="translate(150,406) scale(1.18,1.1) translate(-150,-406)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M163,436 Q166,452 146,467 Q135,467 135,436 Q149,432 163,436 Z"/></g>
-            <g transform="translate(90,406) scale(1.18,1.1) translate(-90,-406)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M90,406 Q81,408 77,436 Q91,432 105,436 Q100,410 90,406 Z"/></g>
-            <g transform="translate(90,406) scale(1.18,1.1) translate(-90,-406)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M77,436 Q74,452 94,467 Q105,467 105,436 Q91,432 77,436 Z"/></g>
+            <path class="musclepart" data-muscle="calves" data-subpart="upper" d="M150,406 Q159,408 163,436 Q149,432 135,436 Q140,410 150,406 Z"/>
+            <path class="musclepart" data-muscle="calves" data-subpart="lower" d="M163,436 Q166,452 146,467 Q135,467 135,436 Q149,432 163,436 Z"/>
+            <path class="musclepart" data-muscle="calves" data-subpart="upper" d="M90,406 Q81,408 77,436 Q91,432 105,436 Q100,410 90,406 Z"/>
+            <path class="musclepart" data-muscle="calves" data-subpart="lower" d="M77,436 Q74,452 94,467 Q105,467 105,436 Q91,432 77,436 Z"/>
             <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
             <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
           </svg>
@@ -891,8 +891,8 @@
             <g transform="translate(90,256) scale(1.18,1.1) translate(-90,-256)"><path class="muscle-line" d="M97,262 C99,292 99,326 95,360"/></g>
 
             <!-- calves seen from the front (not tracked here — calves rank is shown on the back view) -->
-            <g transform="translate(159,410) scale(1.18,1.1) translate(-159,-410)"><path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/></g>
-            <g transform="translate(81,410) scale(1.18,1.1) translate(-81,-410)"><path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/></g>
+            <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
+            <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
 
             <!-- feet -->
             <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
@@ -950,10 +950,10 @@
             <g transform="translate(90,272) scale(1.18,1.1) translate(-90,-272)"><path class="muscle-line" d="M84,282 C80,305 82,330 88,354"/></g>
 
             <!-- calves (continue the outward angle down to the ankle) -->
-            <g transform="translate(150,406) scale(1.18,1.1) translate(-150,-406)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M150,406 Q159,408 163,436 Q149,432 135,436 Q140,410 150,406 Z"/></g>
-            <g transform="translate(150,406) scale(1.18,1.1) translate(-150,-406)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M163,436 Q166,452 146,467 Q135,467 135,436 Q149,432 163,436 Z"/></g>
-            <g transform="translate(90,406) scale(1.18,1.1) translate(-90,-406)"><path class="musclepart" data-muscle="calves" data-subpart="upper" d="M90,406 Q81,408 77,436 Q91,432 105,436 Q100,410 90,406 Z"/></g>
-            <g transform="translate(90,406) scale(1.18,1.1) translate(-90,-406)"><path class="musclepart" data-muscle="calves" data-subpart="lower" d="M77,436 Q74,452 94,467 Q105,467 105,436 Q91,432 77,436 Z"/></g>
+            <path class="musclepart" data-muscle="calves" data-subpart="upper" d="M150,406 Q159,408 163,436 Q149,432 135,436 Q140,410 150,406 Z"/>
+            <path class="musclepart" data-muscle="calves" data-subpart="lower" d="M163,436 Q166,452 146,467 Q135,467 135,436 Q149,432 163,436 Z"/>
+            <path class="musclepart" data-muscle="calves" data-subpart="upper" d="M90,406 Q81,408 77,436 Q91,432 105,436 Q100,410 90,406 Z"/>
+            <path class="musclepart" data-muscle="calves" data-subpart="lower" d="M77,436 Q74,452 94,467 Q105,467 105,436 Q91,432 77,436 Z"/>
 
             <!-- feet -->
             <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
@@ -3493,8 +3493,8 @@ function friendBodyFrontSvg(data){
     <g transform="translate(150,256) scale(1.18,1.1) translate(-150,-256)"><path class="musclepart"${fStyle(data,'quads','lower')} d="M165,328 Q168,365 152,396 Q145,405 140,399 Q135,365 137,328 Q150,333 165,328 Z"/></g>
     <g transform="translate(90,256) scale(1.18,1.1) translate(-90,-256)"><path class="musclepart"${fStyle(data,'quads','upper')} d="M90,256 Q77,262 73,314 Q74,322 75,328 Q90,333 103,328 Q104,290 90,256 Z"/></g>
     <g transform="translate(90,256) scale(1.18,1.1) translate(-90,-256)"><path class="musclepart"${fStyle(data,'quads','lower')} d="M75,328 Q72,365 88,396 Q95,405 100,399 Q105,365 103,328 Q90,333 75,328 Z"/></g>
-    <g transform="translate(159,410) scale(1.18,1.1) translate(-159,-410)"><path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/></g>
-    <g transform="translate(81,410) scale(1.18,1.1) translate(-81,-410)"><path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/></g>
+    <path class="bodypart-neutral" d="M159,410 C166,413 170,428 168,447 C167,458 161,464 157,462 C152,460 150,446 151,428 C152,417 155,410 159,410 Z"/>
+    <path class="bodypart-neutral" d="M81,410 C74,413 70,428 72,447 C73,458 79,464 83,462 C88,460 90,446 89,428 C88,417 85,410 81,410 Z"/>
     <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
     <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
   </svg>`;
@@ -3524,10 +3524,10 @@ function friendBodyBackSvg(data){
     <g transform="translate(150,272) scale(1.18,1.1) translate(-150,-272)"><path class="musclepart"${fStyle(data,'hamstrings','lower')} d="M165,329 Q168,360 152,390 Q145,398 140,394 Q135,360 137,329 Q150,334 165,329 Z"/></g>
     <g transform="translate(90,272) scale(1.18,1.1) translate(-90,-272)"><path class="musclepart"${fStyle(data,'hamstrings','upper')} d="M90,272 Q77,278 73,316 Q74,323 75,329 Q90,334 103,329 Q104,306 90,272 Z"/></g>
     <g transform="translate(90,272) scale(1.18,1.1) translate(-90,-272)"><path class="musclepart"${fStyle(data,'hamstrings','lower')} d="M75,329 Q72,360 88,390 Q95,398 100,394 Q105,360 103,329 Q90,334 75,329 Z"/></g>
-    <g transform="translate(150,406) scale(1.18,1.1) translate(-150,-406)"><path class="musclepart"${fStyle(data,'calves','upper')} d="M150,406 Q159,408 163,436 Q149,432 135,436 Q140,410 150,406 Z"/></g>
-    <g transform="translate(150,406) scale(1.18,1.1) translate(-150,-406)"><path class="musclepart"${fStyle(data,'calves','lower')} d="M163,436 Q166,452 146,467 Q135,467 135,436 Q149,432 163,436 Z"/></g>
-    <g transform="translate(90,406) scale(1.18,1.1) translate(-90,-406)"><path class="musclepart"${fStyle(data,'calves','upper')} d="M90,406 Q81,408 77,436 Q91,432 105,436 Q100,410 90,406 Z"/></g>
-    <g transform="translate(90,406) scale(1.18,1.1) translate(-90,-406)"><path class="musclepart"${fStyle(data,'calves','lower')} d="M77,436 Q74,452 94,467 Q105,467 105,436 Q91,432 77,436 Z"/></g>
+    <path class="musclepart"${fStyle(data,'calves','upper')} d="M150,406 Q159,408 163,436 Q149,432 135,436 Q140,410 150,406 Z"/>
+    <path class="musclepart"${fStyle(data,'calves','lower')} d="M163,436 Q166,452 146,467 Q135,467 135,436 Q149,432 163,436 Z"/>
+    <path class="musclepart"${fStyle(data,'calves','upper')} d="M90,406 Q81,408 77,436 Q91,432 105,436 Q100,410 90,406 Z"/>
+    <path class="musclepart"${fStyle(data,'calves','lower')} d="M77,436 Q74,452 94,467 Q105,467 105,436 Q91,432 77,436 Z"/>
     <ellipse class="bodypart-neutral" cx="164" cy="480" rx="15" ry="8" transform="rotate(14 164 480)"/>
     <ellipse class="bodypart-neutral" cx="76" cy="480" rx="15" ry="8" transform="rotate(-14 76 480)"/>
   </svg>`;
