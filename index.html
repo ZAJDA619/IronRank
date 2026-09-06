@@ -2092,7 +2092,10 @@ function renderQuickStartRoutines(){
   wrap.style.display = 'block';
   wrap.innerHTML = `<div class="tiny" style="margin-bottom:8px">Nebo pokračuj s uloženou rutinou:</div>
     <div style="display:flex; flex-wrap:wrap; gap:8px">
-      ${presets.map(p => `<button type="button" class="btn secondary small" data-startpreset="${p.id}">⚡ ${escapeHtml(p.name)} <span class="tiny">(${p.exercises.length})</span></button>`).join('')}
+      ${presets.map(p => `<div style="display:flex; align-items:center; gap:2px">
+        <button type="button" class="btn secondary small" data-startpreset="${p.id}">⚡ ${escapeHtml(p.name)} <span class="tiny">(${p.exercises.length})</span></button>
+        <button type="button" class="btn danger small" data-delpreset="${p.id}" title="Smazat rutinu" style="padding:4px 8px; line-height:1">✕</button>
+      </div>`).join('')}
     </div>`;
 }
 
@@ -2731,6 +2734,21 @@ document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
   }
   const workout = {date, name, exercises: cleanExercises, photos: [...currentWorkoutPhotos]};
   state.workouts.push(workout);
+
+  // Also count each exercise's best set from this workout toward its rank, so the body
+  // figure lights up from ordinary logged training too, not just the "Zapsat PR" form.
+  cleanExercises.forEach(e => {
+    let best = null;
+    e.sets.forEach(s => {
+      const load = epley1RM(effectiveLoad(e.name, s.weight), s.reps, state.profile.age);
+      if(!best || load > best.load) best = {weight: s.weight, reps: s.reps, load};
+    });
+    if(best){
+      if(!state.manualPRs[e.name]) state.manualPRs[e.name] = [];
+      state.manualPRs[e.name].push({weight: best.weight, reps: best.reps, date});
+    }
+  });
+  recomputeExerciseStats();
 
   const streak = computeStreak(state);
   const breakdown = xpBreakdown(workout, streak);
