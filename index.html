@@ -716,6 +716,9 @@
       <div id="quickStartRoutines" style="display:none; margin-bottom:20px"></div>
 
       <div id="logFormBody" style="display:none">
+        <div id="workoutTimerWrap" style="display:none; align-items:center; gap:8px; margin-bottom:14px; font-size:20px; font-weight:800; color:var(--accent)">
+          <span id="workoutTimerLbl"></span>
+        </div>
         <div class="log-section" id="routineDetailsSection" style="display:none; margin-top:0; padding-top:0; border-top:none">
           <label>Název rutiny</label>
           <input type="text" id="routineName" placeholder="např. Push day, Nohy, Ramena...">
@@ -1492,6 +1495,8 @@ let currentWorkoutExercises = []; // [{name, sets:[{weight,reps}]}]
 let activePresetId = null;
 let currentWorkoutPhotos = [];
 let logMode = null; // null | 'workout' | 'routine'
+let workoutTimerStart = null;
+let workoutTimerInterval = null;
 
 // ---------- Core formulas ----------
 function ageFactor(age){
@@ -2273,10 +2278,17 @@ function renderExercises(){
   container.innerHTML = entries.map(([name, ex]) => exCardHTML(name, ex)).join('');
 }
 
+function formatDurationMin(min){
+  if(!min) return '';
+  if(min < 60) return `${min} min`;
+  const h = Math.floor(min / 60), m = min % 60;
+  return m ? `${h} h ${m} min` : `${h} h`;
+}
 function historyItemHTML(w, idx, prefix){
   const detailsId = `${prefix || 'h'}Details_${idx}`;
   const xp = w.xpEarned != null ? w.xpEarned : xpForWorkout(w);
   const photos = (w.photos && w.photos.length) ? w.photos : (w.photo ? [w.photo] : []);
+  const durationLabel = formatDurationMin(w.durationMin);
   return `<div class="history-item">
     <div class="hrow" data-togglehist="${detailsId}">
       ${photos.length ? `
@@ -2287,7 +2299,7 @@ function historyItemHTML(w, idx, prefix){
       ` : '<div class="hthumb hthumb-empty">🏋️</div>'}
       <div class="hinfo">
         <div class="hname">${w.name ? escapeHtml(w.name) : w.date}</div>
-        ${w.name ? `<div class="tiny">${w.date}</div>` : ''}
+        <div class="tiny">${w.name ? w.date : ''}${w.name && durationLabel ? ' · ' : ''}${durationLabel ? `⏱ ${durationLabel}` : ''}</div>
       </div>
       <span class="hchevron">▾</span>
     </div>
@@ -2482,6 +2494,40 @@ document.getElementById('newPresetBtn').addEventListener('click', async () => {
 });
 document.getElementById('closePresetModalBtn').addEventListener('click', closePresetModal);
 
+// ---------- Workout timer (runs while a plain workout is being logged) ----------
+function formatElapsed(ms){
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+function updateWorkoutTimerDisplay(){
+  const el = document.getElementById('workoutTimerLbl');
+  if(!el || !workoutTimerStart) return;
+  el.textContent = `⏱ ${formatElapsed(Date.now() - workoutTimerStart)}`;
+}
+function startWorkoutTimer(){
+  if(workoutTimerStart) return;
+  workoutTimerStart = Date.now();
+  workoutTimerInterval = setInterval(updateWorkoutTimerDisplay, 1000);
+  updateWorkoutTimerDisplay();
+}
+function stopWorkoutTimer(){
+  if(workoutTimerInterval) clearInterval(workoutTimerInterval);
+  workoutTimerInterval = null;
+  workoutTimerStart = null;
+  const el = document.getElementById('workoutTimerLbl');
+  if(el) el.textContent = '';
+}
+// Minutes elapsed since the timer started (min. 1 once it's running), or null if not running.
+function currentWorkoutDurationMin(){
+  if(!workoutTimerStart) return null;
+  return Math.max(1, Math.round((Date.now() - workoutTimerStart) / 60000));
+}
+
 function showLogForm(mode){
   logMode = mode;
   document.getElementById('logFormBody').style.display = 'block';
@@ -2495,10 +2541,14 @@ function showLogForm(mode){
   document.getElementById('addToPresetWrap').style.display = isRoutine ? 'none' : (activePresetId ? 'flex' : 'none');
   document.getElementById('logExercisesTitle').innerHTML = (isRoutine ? '💪 Cviky v rutině' : '💪 Cviky') + ' <span class="tiny badge-count" id="currentExCount"></span>';
   document.getElementById('routineHint').style.display = isRoutine ? 'block' : 'none';
+  document.getElementById('workoutTimerWrap').style.display = isRoutine ? 'none' : 'flex';
+  stopWorkoutTimer();
+  if(!isRoutine) startWorkoutTimer();
 }
 function hideLogForm(){
   logMode = null;
   document.getElementById('logFormBody').style.display = 'none';
+  stopWorkoutTimer();
 }
 async function resetAndCancelLogging(){
   if(currentWorkoutExercises.length && !await showConfirm('Zrušit rozepsaný trénink/rutinu?')) return false;
@@ -2699,7 +2749,8 @@ document.getElementById('saveWorkoutBtn').addEventListener('click', () => {
     showToast('Přidej alespoň jeden cvik s vyplněnou váhou a počtem opakování.', 'warn');
     return;
   }
-  const workout = {date, name, exercises: cleanExercises, photos: [...currentWorkoutPhotos]};
+  const durationMin = currentWorkoutDurationMin();
+  const workout = {date, name, exercises: cleanExercises, photos: [...currentWorkoutPhotos], durationMin};
   state.workouts.push(workout);
 
   // Also count each exercise's best set from this workout toward its rank, so the body
