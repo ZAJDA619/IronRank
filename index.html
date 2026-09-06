@@ -966,16 +966,10 @@
 
     <div class="card">
       <h2>📝 Zapsat PR</h2>
-      <div class="row2">
-        <div>
-          <label>Cvik</label>
-          <select id="prLogSelect"></select>
-        </div>
-        <div style="position:relative">
-          <label>Nebo napiš cvik <span class="tiny">(najde i existující)</span></label>
-          <input type="text" id="prLogNewName" placeholder="Hledej podle názvu, nebo napiš nový cvik..." autocomplete="off">
-          <div id="prLogSuggestions" class="ex-suggestions" style="display:none"></div>
-        </div>
+      <div style="position:relative">
+        <label>Cvik</label>
+        <input type="text" id="prLogNewName" placeholder="Hledej podle názvu, nebo napiš nový cvik..." autocomplete="off">
+        <div id="prLogSuggestions" class="ex-suggestions" style="display:none"></div>
       </div>
       <div id="prLogMuscleWrap" style="display:none">
         <label>Jakou svalovou skupinu nový cvik trénuje?</label>
@@ -2201,12 +2195,6 @@ function renderPresetManageList(){
 }
 
 function renderPRForm(){
-  const sel = document.getElementById('prLogSelect');
-  const prevValue = sel.value;
-  const {optsHtml} = buildExerciseOptionsHTML('— vyber cvik —');
-  sel.innerHTML = optsHtml;
-  if(prevValue && [...sel.options].some(o => o.value === prevValue)) sel.value = prevValue;
-
   const muscleSel = document.getElementById('prLogMuscle');
   if(muscleSel.options.length <= 1){
     muscleSel.innerHTML = '<option value="">— vyber svalovou skupinu —</option>' +
@@ -2635,7 +2623,7 @@ document.addEventListener('click', async (e) => {
 });
 
 function currentPRLogName(){
-  return resolveExerciseName(document.getElementById('prLogNewName').value) || document.getElementById('prLogSelect').value;
+  return resolveExerciseName(document.getElementById('prLogNewName').value);
 }
 function updatePRLogWeightHint(){
   const hint = document.getElementById('prLogWeightHint');
@@ -2657,12 +2645,10 @@ document.getElementById('prLogNewName').addEventListener('input', () => {
   renderPRLogSuggestions();
 });
 document.getElementById('prLogNewName').addEventListener('focus', renderPRLogSuggestions);
-document.getElementById('prLogSelect').addEventListener('change', updatePRLogWeightHint);
 
 document.getElementById('prLogSaveBtn').addEventListener('click', () => {
   const newName = resolveExerciseName(document.getElementById('prLogNewName').value);
-  const selected = document.getElementById('prLogSelect').value;
-  const name = newName || selected;
+  const name = newName;
   if(!name){
     showToast('Vyber cvik nebo zadej jeho název.', 'warn');
     return;
@@ -2690,7 +2676,6 @@ document.getElementById('prLogSaveBtn').addEventListener('click', () => {
   saveState();
 
   document.getElementById('prLogNewName').value = '';
-  document.getElementById('prLogSelect').value = '';
   document.getElementById('prLogMuscleWrap').style.display = 'none';
   document.getElementById('prLogWeight').value = '';
   document.getElementById('prLogReps').value = '';
