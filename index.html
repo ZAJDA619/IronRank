@@ -2498,7 +2498,7 @@ function showLogForm(mode){
   document.getElementById('logFormBody').style.display = 'block';
   const isRoutine = mode === 'routine';
   document.getElementById('routineDetailsSection').style.display = isRoutine ? 'block' : 'none';
-  document.getElementById('logPresetsSection').style.display = isRoutine ? 'none' : '';
+  document.getElementById('logPresetsSection').style.display = isRoutine ? '' : 'none';
   document.getElementById('logDetailsSection').style.display = isRoutine ? 'none' : '';
   document.getElementById('saveAsPresetBtn').style.display = isRoutine ? 'none' : '';
   document.getElementById('saveWorkoutBtn').style.display = isRoutine ? 'none' : '';
