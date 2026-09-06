@@ -719,16 +719,6 @@
         <div class="log-section" id="routineDetailsSection" style="display:none; margin-top:0; padding-top:0; border-top:none">
           <label>Název rutiny</label>
           <input type="text" id="routineName" placeholder="např. Push day, Nohy, Ramena...">
-          <div style="margin-top:12px">
-            <label>Fotka rutiny <span class="tiny">(nepovinné)</span></label>
-            <div>
-              <input type="file" id="routinePhotoInput" accept="image/*">
-            </div>
-            <div id="routinePhotoPreviewWrap" style="display:none; margin-top:10px; position:relative; width:110px">
-              <img id="routinePhotoPreview" src="" alt="" style="width:110px; height:110px; object-fit:cover; border-radius:12px; border:1px solid var(--border)">
-              <button type="button" id="removeRoutinePhotoBtn" class="btn danger small" style="position:absolute; top:-8px; right:-8px; padding:2px 8px; line-height:1">✕</button>
-            </div>
-          </div>
         </div>
         <div class="log-section" id="logPresetsSection" style="margin-top:0; padding-top:0; border-top:none">
           <div class="log-section-title">⚡ Rychlý start</div>
@@ -1502,7 +1492,6 @@ let currentWorkoutExercises = []; // [{name, sets:[{weight,reps}]}]
 let activePresetId = null;
 let currentWorkoutPhotos = [];
 let logMode = null; // null | 'workout' | 'routine'
-let currentRoutinePhoto = null;
 
 // ---------- Core formulas ----------
 function ageFactor(age){
@@ -2179,7 +2168,7 @@ function renderPresetManageList(){
   wrap.innerHTML = presets.map(p => `
     <div class="exercise-block">
       <div class="ehead">
-        <b>${p.photo ? `<img src="${p.photo}" alt="" class="avatar-clickable" onclick="openAvatarLightbox(this.src)" style="width:32px;height:32px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-right:8px">` : ''}${escapeHtml(p.name)}</b>
+        <b>${escapeHtml(p.name)}</b>
         <button class="btn danger small" data-delpreset="${p.id}">Smazat rutinu</button>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin:10px 0">
@@ -2516,12 +2505,9 @@ async function resetAndCancelLogging(){
   currentWorkoutExercises = [];
   activePresetId = null;
   currentWorkoutPhotos = [];
-  currentRoutinePhoto = null;
   document.getElementById('workoutName').value = '';
   document.getElementById('workoutPhotoInput').value = '';
   document.getElementById('routineName').value = '';
-  document.getElementById('routinePhotoInput').value = '';
-  updateRoutinePhotoPreview();
   hideLogForm();
   renderQuickStartRoutines();
   return true;
@@ -2554,17 +2540,13 @@ document.getElementById('saveRoutineBtn').addEventListener('click', async () => 
   const existing = state.presets.find(p => p.name.toLowerCase() === trimmed.toLowerCase());
   if(existing){
     names.forEach(n => { if(!existing.exercises.includes(n)) existing.exercises.push(n); });
-    if(currentRoutinePhoto) existing.photo = currentRoutinePhoto;
   } else {
-    state.presets.push({id: 'p_' + Date.now().toString(36), name: trimmed, exercises: [...names], photo: currentRoutinePhoto || null});
+    state.presets.push({id: 'p_' + Date.now().toString(36), name: trimmed, exercises: [...names]});
   }
   saveState();
   currentWorkoutExercises = [];
   activePresetId = null;
-  currentRoutinePhoto = null;
   document.getElementById('routineName').value = '';
-  document.getElementById('routinePhotoInput').value = '';
-  updateRoutinePhotoPreview();
   hideLogForm();
   renderLogTab();
   showToast(`Rutina „${trimmed}“ uložena`);
@@ -3144,36 +3126,6 @@ document.getElementById('workoutPhotoInput').addEventListener('change', (e) => {
       }
     });
   });
-});
-
-// ---------- Routine cover photo ----------
-function updateRoutinePhotoPreview(){
-  const wrap = document.getElementById('routinePhotoPreviewWrap');
-  const img = document.getElementById('routinePhotoPreview');
-  if(currentRoutinePhoto){
-    img.src = currentRoutinePhoto;
-    wrap.style.display = 'block';
-  } else {
-    wrap.style.display = 'none';
-  }
-}
-document.getElementById('routinePhotoInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  if(file.size > 8 * 1024 * 1024){
-    showToast('Obrázek je moc velký, zkus prosím menší (max 8 MB).', 'warn');
-    e.target.value = '';
-    return;
-  }
-  resizeImageFile(file, 500, 0.75, (dataUrl) => {
-    currentRoutinePhoto = dataUrl;
-    updateRoutinePhotoPreview();
-  });
-});
-document.getElementById('removeRoutinePhotoBtn').addEventListener('click', () => {
-  currentRoutinePhoto = null;
-  document.getElementById('routinePhotoInput').value = '';
-  updateRoutinePhotoPreview();
 });
 
 // ---------- Avatar crop (drag to pan, slider to zoom — like Instagram's avatar picker) ----------
